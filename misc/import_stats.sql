@@ -1,11 +1,11 @@
 --
--- Table structure for table `get5_stats_maps`
+-- Table structure for table `OpenPug_stats_maps`
 --
 
-DROP TABLE IF EXISTS `get5_stats_maps`;
+DROP TABLE IF EXISTS `OpenPug_stats_maps`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `get5_stats_maps` (
+CREATE TABLE `OpenPug_stats_maps` (
   `matchid` int(10) unsigned NOT NULL,
   `mapnumber` smallint(5) unsigned NOT NULL,
   `start_time` datetime NOT NULL,
@@ -19,22 +19,22 @@ CREATE TABLE `get5_stats_maps` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `get5_stats_maps`
+-- Dumping data for table `OpenPug_stats_maps`
 --
 
-LOCK TABLES `get5_stats_maps` WRITE;
-/*!40000 ALTER TABLE `get5_stats_maps` DISABLE KEYS */;
-/*!40000 ALTER TABLE `get5_stats_maps` ENABLE KEYS */;
+LOCK TABLES `OpenPug_stats_maps` WRITE;
+/*!40000 ALTER TABLE `OpenPug_stats_maps` DISABLE KEYS */;
+/*!40000 ALTER TABLE `OpenPug_stats_maps` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
--- Table structure for table `get5_stats_matches`
+-- Table structure for table `OpenPug_stats_matches`
 --
 
-DROP TABLE IF EXISTS `get5_stats_matches`;
+DROP TABLE IF EXISTS `OpenPug_stats_matches`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `get5_stats_matches` (
+CREATE TABLE `OpenPug_stats_matches` (
   `matchid` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `start_time` datetime NOT NULL,
   `end_time` datetime,
@@ -49,22 +49,22 @@ CREATE TABLE `get5_stats_matches` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `get5_stats_matches`
+-- Dumping data for table `OpenPug_stats_matches`
 --
 
-LOCK TABLES `get5_stats_matches` WRITE;
-/*!40000 ALTER TABLE `get5_stats_matches` DISABLE KEYS */;
-/*!40000 ALTER TABLE `get5_stats_matches` ENABLE KEYS */;
+LOCK TABLES `OpenPug_stats_matches` WRITE;
+/*!40000 ALTER TABLE `OpenPug_stats_matches` DISABLE KEYS */;
+/*!40000 ALTER TABLE `OpenPug_stats_matches` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
--- Table structure for table `get5_stats_players`
+-- Table structure for table `OpenPug_stats_players`
 --
 
-DROP TABLE IF EXISTS `get5_stats_players`;
+DROP TABLE IF EXISTS `OpenPug_stats_players`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `get5_stats_players` (
+CREATE TABLE `OpenPug_stats_players` (
   `matchid` int(10) unsigned NOT NULL,
   `mapnumber` smallint(5) unsigned NOT NULL,
   `steamid64` varchar(32) NOT NULL,
@@ -100,12 +100,12 @@ CREATE TABLE `get5_stats_players` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `get5_stats_players`
+-- Dumping data for table `OpenPug_stats_players`
 --
 
-LOCK TABLES `get5_stats_players` WRITE;
-/*!40000 ALTER TABLE `get5_stats_players` DISABLE KEYS */;
-/*!40000 ALTER TABLE `get5_stats_players` ENABLE KEYS */;
+LOCK TABLES `OpenPug_stats_players` WRITE;
+/*!40000 ALTER TABLE `OpenPug_stats_players` DISABLE KEYS */;
+/*!40000 ALTER TABLE `OpenPug_stats_players` ENABLE KEYS */;
 UNLOCK TABLES;
 
 -- Dump completed on 2016-07-03  1:10:28

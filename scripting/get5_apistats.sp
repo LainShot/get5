@@ -1,6 +1,6 @@
 /**
  * =============================================================================
- * Get5 web API integration
+ * OpenPug web API integration
  * Copyright (C) 2016. Sean Lewis.  All rights reserved.
  * =============================================================================
  *
@@ -18,18 +18,18 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "include/get5.inc"
+#include "include/OpenPug.inc"
 #include "include/logdebug.inc"
 #include <cstrike>
 #include <sourcemod>
 
-#include "get5/util.sp"
-#include "get5/version.sp"
+#include "OpenPug/util.sp"
+#include "OpenPug/version.sp"
 
 #include <SteamWorks>
 #include <json>  // github.com/clugg/sm-json
 
-#include "get5/jsonhelpers.sp"
+#include "OpenPug/jsonhelpers.sp"
 
 #pragma semicolon 1
 #pragma newdecls required
@@ -48,43 +48,43 @@ char g_APIURL[128];
 
 // clang-format off
 public Plugin myinfo = {
-  name = "Get5 Web API Integration",
+  name = "OpenPug Web API Integration",
   author = "splewis",
-  description = "Records match stats to a get5-web api",
+  description = "Records match stats to a OpenPug-web api",
   version = PLUGIN_VERSION,
-  url = "https://github.com/splewis/get5"
+  url = "https://github.com/splewis/OpenPug"
 };
 // clang-format on
 
 public void OnPluginStart() {
-  InitDebugLog("get5_debug", "get5_api");
+  InitDebugLog("OpenPug_debug", "OpenPug_api");
   LogDebug("OnPluginStart version=%s", PLUGIN_VERSION);
-  g_UseSVGCvar = CreateConVar("get5_use_svg", "1", "support svg team logos");
+  g_UseSVGCvar = CreateConVar("OpenPug_use_svg", "1", "support svg team logos");
   HookConVarChange(g_UseSVGCvar, LogoBasePathChanged);
   g_LogoBasePath = g_UseSVGCvar.BoolValue ? LOGO_DIR : LEGACY_LOGO_DIR;
   g_APIKeyCvar =
-      CreateConVar("get5_web_api_key", "", "Match API key, this is automatically set through rcon");
+      CreateConVar("OpenPug_web_api_key", "", "Match API key, this is automatically set through rcon");
   HookConVarChange(g_APIKeyCvar, ApiInfoChanged);
 
-  g_APIURLCvar = CreateConVar("get5_web_api_url", "", "URL the get5 api is hosted at");
+  g_APIURLCvar = CreateConVar("OpenPug_web_api_url", "", "URL the OpenPug api is hosted at");
 
   HookConVarChange(g_APIURLCvar, ApiInfoChanged);
 
-  RegConsoleCmd("get5_web_avaliable",
+  RegConsoleCmd("OpenPug_web_avaliable",
                 Command_Avaliable);  // legacy version since I'm bad at spelling
-  RegConsoleCmd("get5_web_available", Command_Avaliable);
+  RegConsoleCmd("OpenPug_web_available", Command_Avaliable);
 }
 
 public Action Command_Avaliable(int client, int args) {
   char versionString[64] = "unknown";
-  ConVar versionCvar = FindConVar("get5_version");
+  ConVar versionCvar = FindConVar("OpenPug_version");
   if (versionCvar != null) {
     versionCvar.GetString(versionString, sizeof(versionString));
   }
 
   JSON_Object json = new JSON_Object();
 
-  json.SetInt("gamestate", view_as<int>(Get5_GetGameState()));
+  json.SetInt("gamestate", view_as<int>(OpenPug_GetGameState()));
   json.SetInt("avaliable", 1);  // legacy version since I'm bad at spelling
   json.SetInt("available", 1);
   json.SetString("plugin_version", versionString);
@@ -112,7 +112,7 @@ public void ApiInfoChanged(ConVar convar, const char[] oldValue, const char[] ne
     StrCat(g_APIURL, sizeof(g_APIURL), "/");
   }
 
-  LogDebug("get5_web_api_url now set to %s", g_APIURL);
+  LogDebug("OpenPug_web_api_url now set to %s", g_APIURL);
 }
 
 static Handle CreateRequest(EHTTPMethod httpMethod, const char[] apiMethod, any:...) {
@@ -151,15 +151,15 @@ public int RequestCallback(Handle request, bool failure, bool requestSuccessful,
   }
 }
 
-public void Get5_OnBackupRestore() {
+public void OpenPug_OnBackupRestore() {
   char matchid[64];
-  Get5_GetMatchID(matchid, sizeof(matchid));
+  OpenPug_GetMatchID(matchid, sizeof(matchid));
   g_MatchID = StringToInt(matchid);
 }
 
-public void Get5_OnSeriesInit() {
+public void OpenPug_OnSeriesInit() {
   char matchid[64];
-  Get5_GetMatchID(matchid, sizeof(matchid));
+  OpenPug_GetMatchID(matchid, sizeof(matchid));
   g_MatchID = StringToInt(matchid);
 
   // Handle new logos.
@@ -232,7 +232,7 @@ public int LogoCallback(Handle request, bool failure, bool successful, EHTTPStat
   SteamWorks_WriteHTTPResponseBodyToFile(request, logoPath);
 }
 
-public void Get5_OnGoingLive(int mapNumber) {
+public void OpenPug_OnGoingLive(int mapNumber) {
   char mapName[64];
   GetCurrentMap(mapName, sizeof(mapName));
   Handle req = CreateRequest(k_EHTTPMethodPOST, "match/%d/map/%d/start", g_MatchID, mapNumber);
@@ -241,13 +241,13 @@ public void Get5_OnGoingLive(int mapNumber) {
     SteamWorks_SendHTTPRequest(req);
   }
 
-  Get5_AddLiveCvar("get5_web_api_key", g_APIKey);
-  Get5_AddLiveCvar("get5_web_api_url", g_APIURL);
+  OpenPug_AddLiveCvar("OpenPug_web_api_key", g_APIKey);
+  OpenPug_AddLiveCvar("OpenPug_web_api_url", g_APIURL);
 }
 
 public void UpdateRoundStats(int mapNumber) {
-  int t1score = CS_GetTeamScore(Get5_MatchTeamToCSTeam(MatchTeam_Team1));
-  int t2score = CS_GetTeamScore(Get5_MatchTeamToCSTeam(MatchTeam_Team2));
+  int t1score = CS_GetTeamScore(OpenPug_MatchTeamToCSTeam(MatchTeam_Team1));
+  int t2score = CS_GetTeamScore(OpenPug_MatchTeamToCSTeam(MatchTeam_Team2));
 
   Handle req = CreateRequest(k_EHTTPMethodPOST, "match/%d/map/%d/update", g_MatchID, mapNumber);
   if (req != INVALID_HANDLE) {
@@ -257,7 +257,7 @@ public void UpdateRoundStats(int mapNumber) {
   }
 
   KeyValues kv = new KeyValues("Stats");
-  Get5_GetMatchStats(kv);
+  OpenPug_GetMatchStats(kv);
   char mapKey[32];
   Format(mapKey, sizeof(mapKey), "map%d", mapNumber);
   if (kv.JumpToKey(mapKey)) {
@@ -274,7 +274,7 @@ public void UpdateRoundStats(int mapNumber) {
   delete kv;
 }
 
-public void Get5_OnMapResult(const char[] map, MatchTeam mapWinner, int team1Score, int team2Score,
+public void OpenPug_OnMapResult(const char[] map, MatchTeam mapWinner, int team1Score, int team2Score,
                       int mapNumber) {
   char winnerString[64];
   GetTeamString(mapWinner, winnerString, sizeof(winnerString));
@@ -358,12 +358,12 @@ static void AddIntParam(Handle request, const char[] key, int value) {
   AddStringParam(request, key, buffer);
 }
 
-public void Get5_OnSeriesResult(MatchTeam seriesWinner, int team1MapScore, int team2MapScore) {
+public void OpenPug_OnSeriesResult(MatchTeam seriesWinner, int team1MapScore, int team2MapScore) {
   char winnerString[64];
   GetTeamString(seriesWinner, winnerString, sizeof(winnerString));
 
   KeyValues kv = new KeyValues("Stats");
-  Get5_GetMatchStats(kv);
+  OpenPug_GetMatchStats(kv);
   bool forfeit = kv.GetNum(STAT_SERIES_FORFEIT, 0) != 0;
   delete kv;
 
@@ -377,8 +377,8 @@ public void Get5_OnSeriesResult(MatchTeam seriesWinner, int team1MapScore, int t
   g_APIKeyCvar.SetString("");
 }
 
-public void Get5_OnRoundStatsUpdated() {
-  if (Get5_GetGameState() == Get5State_Live) {
+public void OpenPug_OnRoundStatsUpdated() {
+  if (OpenPug_GetGameState() == OpenPugState_Live) {
     UpdateRoundStats(MapNumber());
   }
 }
@@ -386,8 +386,8 @@ public void Get5_OnRoundStatsUpdated() {
 static int MapNumber() {
   int t1, t2, n;
   int buf;
-  Get5_GetTeamScores(MatchTeam_Team1, t1, buf);
-  Get5_GetTeamScores(MatchTeam_Team2, t2, buf);
-  Get5_GetTeamScores(MatchTeam_TeamNone, n, buf);
+  OpenPug_GetTeamScores(MatchTeam_Team1, t1, buf);
+  OpenPug_GetTeamScores(MatchTeam_Team2, t2, buf);
+  OpenPug_GetTeamScores(MatchTeam_TeamNone, n, buf);
   return t1 + t2 + n;
 }

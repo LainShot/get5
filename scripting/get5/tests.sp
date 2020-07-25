@@ -1,20 +1,20 @@
 public Action Command_Test(int args) {
-  Get5_Test();
+  OpenPug_Test();
   return Plugin_Handled;
 }
 
-public void Get5_Test() {
-  if (g_GameState != Get5State_None) {
-    g_GameState = Get5State_None;
+public void OpenPug_Test() {
+  if (g_GameState != OpenPugState_None) {
+    g_GameState = OpenPugState_None;
   }
   char path[PLATFORM_MAX_PATH];
-  BuildPath(Path_SM, path, sizeof(path), "configs/get5/example_match.cfg");
+  BuildPath(Path_SM, path, sizeof(path), "configs/OpenPug/example_match.cfg");
   LoadMatchConfig(path);
 
   Utils_Test();
   KV_Test();
 
-  g_GameState = Get5State_None;
+  g_GameState = OpenPugState_None;
 }
 
 static void Utils_Test() {

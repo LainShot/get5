@@ -286,7 +286,7 @@
     }
     "MatchPoweredBy"
     {
-        "chi"        "由{YELLOW}Get5{NORMAL}强力驱动"
+        "chi"        "由{YELLOW}OpenPug{NORMAL}强力驱动"
     }
     "MapVetoPickMenuText"
     {

@@ -1,5 +1,5 @@
 public Action Command_JoinGame(int client, const char[] command, int argc) {
-  if (g_GameState == Get5State_None) {
+  if (g_GameState == OpenPugState_None) {
     return Plugin_Continue;
   }
 
@@ -31,7 +31,7 @@ public Action Command_JoinTeam(int client, const char[] command, int argc) {
     return Plugin_Stop;
 
   // Don't do anything if not live/not in startup phase.
-  if (g_GameState == Get5State_None) {
+  if (g_GameState == OpenPugState_None) {
     return Plugin_Continue;
   }
 
@@ -76,7 +76,7 @@ public Action Command_JoinTeam(int client, const char[] command, int argc) {
       } else {
         LogDebug("Forcing player %N to coach", client);
         MoveClientToCoach(client);
-        Get5_Message(client, "%t", "MoveToCoachInfoMessage");
+        OpenPug_Message(client, "%t", "MoveToCoachInfoMessage");
       }
     } else {
       LogDebug("Forcing player %N onto %d", client, csTeam);
@@ -130,7 +130,7 @@ public void MoveClientToCoach(int client) {
 }
 
 public Action Command_SmCoach(int client, int args) {
-  if (g_GameState == Get5State_None) {
+  if (g_GameState == OpenPugState_None) {
     return Plugin_Continue;
   }
 
@@ -143,7 +143,7 @@ public Action Command_SmCoach(int client, int args) {
 }
 
 public Action Command_Coach(int client, const char[] command, int argc) {
-  if (g_GameState == Get5State_None) {
+  if (g_GameState == OpenPugState_None) {
     return Plugin_Continue;
   }
 
@@ -206,7 +206,7 @@ public MatchTeam CSTeamToMatchTeam(int csTeam) {
 }
 
 public MatchTeam GetAuthMatchTeam(const char[] steam64) {
-  if (g_GameState == Get5State_None) {
+  if (g_GameState == OpenPugState_None) {
     return MatchTeam_TeamNone;
   }
 
@@ -347,7 +347,7 @@ public bool AddPlayerToTeam(const char[] auth, MatchTeam team, const char[] name
 
   if (GetAuthMatchTeam(steam64) == MatchTeam_TeamNone) {
     GetTeamAuths(team).PushString(steam64);
-    Get5_SetPlayerName(auth, name);
+    OpenPug_SetPlayerName(auth, name);
     return true;
   } else {
     return false;
@@ -391,7 +391,7 @@ public void LoadPlayerNames() {
   }
 
   if (numNames > 0) {
-    char nameFile[] = "get5_names.txt";
+    char nameFile[] = "OpenPug_names.txt";
     DeleteFile(nameFile);
     if (namesKv.ExportToFile(nameFile)) {
       ServerCommand("sv_load_forced_client_names_file %s", nameFile);

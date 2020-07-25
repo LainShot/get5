@@ -1,26 +1,26 @@
 // TODO: Add translations for this.
 // TODO: Add admin top menu integration.
 
-public Action Command_Get5AdminMenu(int client, int args) {
+public Action Command_OpenPugAdminMenu(int client, int args) {
   Menu menu = new Menu(AdminMenuHandler);
-  menu.SetTitle("Get5 Admin Menu");
+  menu.SetTitle("OpenPug Admin Menu");
 
   // Add actual choices
-  menu.AddItem("get5_scrim", "Create a scrim", EnabledIf(g_GameState == Get5State_None));
-  menu.AddItem("get5_creatematch", "Create match with current players",
-               EnabledIf(g_GameState == Get5State_None));
-  menu.AddItem("get5_forceready", "Force-ready all players",
-               EnabledIf(g_GameState == Get5State_Warmup || g_GameState == Get5State_PreVeto));
-  menu.AddItem("get5_endmatch", "End match", EnabledIf(g_GameState != Get5State_None));
+  menu.AddItem("OpenPug_scrim", "Create a scrim", EnabledIf(g_GameState == OpenPugState_None));
+  menu.AddItem("OpenPug_creatematch", "Create match with current players",
+               EnabledIf(g_GameState == OpenPugState_None));
+  menu.AddItem("OpenPug_forceready", "Force-ready all players",
+               EnabledIf(g_GameState == OpenPugState_Warmup || g_GameState == OpenPugState_PreVeto));
+  menu.AddItem("OpenPug_endmatch", "End match", EnabledIf(g_GameState != OpenPugState_None));
   menu.AddItem("ringer", "Add scrim ringer",
-               EnabledIf(g_InScrimMode && g_GameState != Get5State_None));
+               EnabledIf(g_InScrimMode && g_GameState != OpenPugState_None));
   menu.AddItem("sm_swap", "Swap scrim sides",
-               EnabledIf(g_InScrimMode && g_GameState == Get5State_Warmup));
+               EnabledIf(g_InScrimMode && g_GameState == OpenPugState_Warmup));
 
   char lastBackup[PLATFORM_MAX_PATH];
-  g_LastGet5BackupCvar.GetString(lastBackup, sizeof(lastBackup));
+  g_LastOpenPugBackupCvar.GetString(lastBackup, sizeof(lastBackup));
   menu.AddItem("backup", "Load last backup file",
-               EnabledIf(g_GameState != Get5State_None && !StrEqual(lastBackup, "")));
+               EnabledIf(g_GameState != OpenPugState_None && !StrEqual(lastBackup, "")));
 
   menu.Pagination = MENU_NO_PAGINATION;
   menu.ExitButton = true;
@@ -38,17 +38,17 @@ public int AdminMenuHandler(Menu menu, MenuAction action, int param1, int param2
     int client = param1;
     char infoString[64];
     menu.GetItem(param2, infoString, sizeof(infoString));
-    if (StrEqual(infoString, "get5_scrim") || StrEqual(infoString, "get5_creatematch") ||
-        StrEqual(infoString, "get5_forceready") || StrEqual(infoString, "get5_endmatch") ||
+    if (StrEqual(infoString, "OpenPug_scrim") || StrEqual(infoString, "OpenPug_creatematch") ||
+        StrEqual(infoString, "OpenPug_forceready") || StrEqual(infoString, "OpenPug_endmatch") ||
         StrEqual(infoString, "sm_swap")) {
       FakeClientCommand(client, infoString);
     } else if (StrEqual(infoString, "ringer")) {
       GiveRingerMenu(client);
     } else if (StrEqual(infoString, "backup")) {
       if (!RestoreLastRound()) {
-        Get5_Message(
+        OpenPug_Message(
             client,
-            "Failed to restore backup file. Try manually using get5_listbackups and get5_loadbackup.");
+            "Failed to restore backup file. Try manually using OpenPug_listbackups and OpenPug_loadbackup.");
       }
     }
   } else if (action == MenuAction_End) {
@@ -83,11 +83,11 @@ public int RingerMenuHandler(Menu menu, MenuAction action, int param1, int param
     int choiceClient = GetClientFromSerial(choiceSerial);
     if (IsPlayer(choiceClient)) {
       SwapScrimTeamStatus(choiceClient);
-      Get5_Message(client, "Swapped scrim team status for %N.", choiceClient);
+      OpenPug_Message(client, "Swapped scrim team status for %N.", choiceClient);
     }
   } else if (action == MenuAction_Cancel && param2 == MenuCancel_ExitBack) {
     int client = param1;
-    Command_Get5AdminMenu(client, 0);
+    Command_OpenPugAdminMenu(client, 0);
   } else if (action == MenuAction_End) {
     delete menu;
   }

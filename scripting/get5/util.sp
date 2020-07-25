@@ -155,7 +155,7 @@ stock bool Record(const char[] demoName) {
 
 stock void StopRecording() {
   ServerCommand("tv_stoprecord");
-  LogDebug("Calling Get5_OnDemoFinished(file=%s)", g_DemoFileName);
+  LogDebug("Calling OpenPug_OnDemoFinished(file=%s)", g_DemoFileName);
   Call_StartForward(g_OnDemoFinished);
   Call_PushString(g_DemoFileName);
   Call_Finish();
@@ -260,7 +260,7 @@ stock void SetTeamInfo(int csTeam, const char[] name, const char[] flag = "",
 
   // Add Ready/Not ready tags to team name if in warmup.
   char taggedName[MAX_CVAR_LENGTH];
-  if ((g_GameState == Get5State_Warmup || g_GameState == Get5State_PreVeto) &&
+  if ((g_GameState == OpenPugState_Warmup || g_GameState == OpenPugState_PreVeto) &&
       !g_DoingBackupRestoreNow) {
     MatchTeam matchTeam = CSTeamToMatchTeam(csTeam);
     if (IsTeamReady(matchTeam)) {
@@ -425,7 +425,7 @@ stock int AddAuthsToList(KeyValues kv, ArrayList list, int maxKeyLength) {
       kv.GetString(NULL_STRING, name, sizeof(name));
       if (ConvertAuthToSteam64(buffer, steam64)) {
         list.PushString(steam64);
-        Get5_SetPlayerName(steam64, name);
+        OpenPug_SetPlayerName(steam64, name);
         count++;
       }
     } while (kv.GotoNextKey(false));
@@ -529,25 +529,25 @@ stock void GetTeamString(MatchTeam team, char[] buffer, int len) {
   }
 }
 
-stock void GameStateString(Get5State state, char[] buffer, int length) {
+stock void GameStateString(OpenPugState state, char[] buffer, int length) {
   switch (state) {
-    case Get5State_None:
+    case OpenPugState_None:
       Format(buffer, length, "none");
-    case Get5State_PreVeto:
+    case OpenPugState_PreVeto:
       Format(buffer, length, "waiting for map veto");
-    case Get5State_Veto:
+    case OpenPugState_Veto:
       Format(buffer, length, "map veto");
-    case Get5State_Warmup:
+    case OpenPugState_Warmup:
       Format(buffer, length, "warmup");
-    case Get5State_KnifeRound:
+    case OpenPugState_KnifeRound:
       Format(buffer, length, "knife round");
-    case Get5State_WaitingForKnifeRoundDecision:
+    case OpenPugState_WaitingForKnifeRoundDecision:
       Format(buffer, length, "waiting for knife round decision");
-    case Get5State_GoingLive:
+    case OpenPugState_GoingLive:
       Format(buffer, length, "going live");
-    case Get5State_Live:
+    case OpenPugState_Live:
       Format(buffer, length, "live");
-    case Get5State_PostGame:
+    case OpenPugState_PostGame:
       Format(buffer, length, "postgame");
   }
 }

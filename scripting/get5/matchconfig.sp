@@ -13,7 +13,7 @@
 #define CONFIG_SIDETYPE_DEFAULT "standard"
 
 stock bool LoadMatchConfig(const char[] config, bool restoreBackup = false) {
-  if (g_GameState != Get5State_None && !restoreBackup) {
+  if (g_GameState != OpenPugState_None && !restoreBackup) {
     return false;
   }
 
@@ -41,7 +41,7 @@ stock bool LoadMatchConfig(const char[] config, bool restoreBackup = false) {
   g_TeamScoresPerMap.Clear();
 
   g_WaitingForRoundBackup = false;
-  g_LastGet5BackupCvar.SetString("");
+  g_LastOpenPugBackupCvar.SetString("");
 
   CloseCvarStorage(g_KnifeChangedCvars);
   CloseCvarStorage(g_MatchConfigChangedCvars);
@@ -53,7 +53,7 @@ stock bool LoadMatchConfig(const char[] config, bool restoreBackup = false) {
   if (!g_CheckAuthsCvar.BoolValue &&
       (GetTeamAuths(MatchTeam_Team1).Length != 0 || GetTeamAuths(MatchTeam_Team2).Length != 0)) {
     LogError(
-        "Setting player auths in the \"players\" section has no impact with get5_check_auths 0");
+        "Setting player auths in the \"players\" section has no impact with OpenPug_check_auths 0");
   }
 
   // Copy all the maps into the veto pool.
@@ -95,7 +95,7 @@ stock bool LoadMatchConfig(const char[] config, bool restoreBackup = false) {
     }
 
     g_MapPoolList.GetString(GetMapNumber(), mapName, sizeof(mapName));
-    ChangeState(Get5State_Warmup);
+    ChangeState(OpenPugState_Warmup);
 
     char currentMap[PLATFORM_MAX_PATH];
     GetCurrentMap(currentMap, sizeof(currentMap));
@@ -103,7 +103,7 @@ stock bool LoadMatchConfig(const char[] config, bool restoreBackup = false) {
       ChangeMap(mapName);
     }
   } else {
-    ChangeState(Get5State_PreVeto);
+    ChangeState(OpenPugState_PreVeto);
   }
 
   if (!restoreBackup) {
@@ -116,7 +116,7 @@ stock bool LoadMatchConfig(const char[] config, bool restoreBackup = false) {
     EventLogger_SeriesStart();
     Stats_InitSeries();
 
-    LogDebug("Calling Get5_OnSeriesInit");
+    LogDebug("Calling OpenPug_OnSeriesInit");
     Call_StartForward(g_OnSeriesInit);
     Call_Finish();
   }
@@ -141,7 +141,7 @@ stock bool LoadMatchConfig(const char[] config, bool restoreBackup = false) {
 }
 
 public bool LoadMatchFile(const char[] config) {
-  LogDebug("Calling Get5_OnPreLoadMatchConfig(config=%s)", config);
+  LogDebug("Calling OpenPug_OnPreLoadMatchConfig(config=%s)", config);
   Call_StartForward(g_OnPreLoadMatchConfig);
   Call_PushString(config);
   Call_Finish();
@@ -158,7 +158,7 @@ public bool LoadMatchFile(const char[] config) {
     if (json != null && LoadMatchFromJson(json)) {
       json.Cleanup();
       delete json;
-      Get5_MessageToAll("%t", "MatchConfigLoadedInfoMessage");
+      OpenPug_MessageToAll("%t", "MatchConfigLoadedInfoMessage");
     } else {
       MatchConfigFail("invalid match json");
       return false;
@@ -173,7 +173,7 @@ public bool LoadMatchFile(const char[] config) {
       return false;
     } else if (kv.ImportFromFile(config) && LoadMatchFromKv(kv)) {
       delete kv;
-      Get5_MessageToAll("%t", "MatchConfigLoadedInfoMessage");
+      OpenPug_MessageToAll("%t", "MatchConfigLoadedInfoMessage");
     } else {
       delete kv;
       MatchConfigFail("invalid match kv");
@@ -191,7 +191,7 @@ static void MatchConfigFail(const char[] reason, any...) {
 
   EventLogger_MatchConfigFail(buffer);
 
-  LogDebug("Calling Get5_OnLoadMatchConfigFailed(reason=%s)", buffer);
+  LogDebug("Calling OpenPug_OnLoadMatchConfigFailed(reason=%s)", buffer);
   Call_StartForward(g_OnLoadMatchConfigFailed);
   Call_PushString(buffer);
   Call_Finish();
@@ -721,7 +721,7 @@ public void ExecuteMatchConfigCvars() {
 }
 
 public Action Command_LoadTeam(int client, int args) {
-  if (g_GameState == Get5State_None) {
+  if (g_GameState == OpenPugState_None) {
     ReplyToCommand(client, "Cannot change player lists when there is no match to modify");
     return Plugin_Handled;
   }
@@ -759,14 +759,14 @@ public Action Command_LoadTeam(int client, int args) {
 }
 
 public Action Command_AddPlayer(int client, int args) {
-  if (g_GameState == Get5State_None) {
+  if (g_GameState == OpenPugState_None) {
     ReplyToCommand(client, "Cannot change player lists when there is no match to modify");
     return Plugin_Handled;
   }
 
   if (g_InScrimMode) {
     ReplyToCommand(
-        client, "Cannot use get5_addplayer in scrim mode. Use get5_ringer to swap a players team.");
+        client, "Cannot use OpenPug_addplayer in scrim mode. Use OpenPug_ringer to swap a players team.");
     return Plugin_Handled;
   }
 
@@ -798,13 +798,13 @@ public Action Command_AddPlayer(int client, int args) {
     }
 
   } else {
-    ReplyToCommand(client, "Usage: get5_addplayer <auth> <team1|team2|spec> [name]");
+    ReplyToCommand(client, "Usage: OpenPug_addplayer <auth> <team1|team2|spec> [name]");
   }
   return Plugin_Handled;
 }
 
 public Action Command_RemovePlayer(int client, int args) {
-  if (g_GameState == Get5State_None) {
+  if (g_GameState == OpenPugState_None) {
     ReplyToCommand(client, "Cannot change player lists when there is no match to modify");
     return Plugin_Handled;
   }
@@ -812,7 +812,7 @@ public Action Command_RemovePlayer(int client, int args) {
   if (g_InScrimMode) {
     ReplyToCommand(
         client,
-        "Cannot use get5_removeplayer in scrim mode. Use get5_ringer to swap a players team.");
+        "Cannot use OpenPug_removeplayer in scrim mode. Use OpenPug_ringer to swap a players team.");
     return Plugin_Handled;
   }
 
@@ -824,13 +824,13 @@ public Action Command_RemovePlayer(int client, int args) {
       ReplyToCommand(client, "Player %s not found in auth lists.", auth);
     }
   } else {
-    ReplyToCommand(client, "Usage: get5_removeplayer <auth>");
+    ReplyToCommand(client, "Usage: OpenPug_removeplayer <auth>");
   }
   return Plugin_Handled;
 }
 
 public Action Command_CreateMatch(int client, int args) {
-  if (g_GameState != Get5State_None) {
+  if (g_GameState != OpenPugState_None) {
     ReplyToCommand(client, "Cannot create a match when a match is already loaded");
     return Plugin_Handled;
   }
@@ -851,7 +851,7 @@ public Action Command_CreateMatch(int client, int args) {
   }
 
   char path[PLATFORM_MAX_PATH];
-  Format(path, sizeof(path), "get5_%s.cfg", matchid);
+  Format(path, sizeof(path), "OpenPug_%s.cfg", matchid);
   DeleteFileIfExists(path);
 
   KeyValues kv = new KeyValues("Match");
@@ -894,7 +894,7 @@ public Action Command_CreateMatch(int client, int args) {
 }
 
 public Action Command_CreateScrim(int client, int args) {
-  if (g_GameState != Get5State_None) {
+  if (g_GameState != OpenPugState_None) {
     ReplyToCommand(client, "Cannot create a match when a match is already loaded");
     return Plugin_Handled;
   }
@@ -919,7 +919,7 @@ public Action Command_CreateScrim(int client, int args) {
   }
 
   char path[PLATFORM_MAX_PATH];
-  Format(path, sizeof(path), "get5_%s.cfg", matchid);
+  Format(path, sizeof(path), "OpenPug_%s.cfg", matchid);
   DeleteFileIfExists(path);
 
   KeyValues kv = new KeyValues("Match");
@@ -930,7 +930,7 @@ public Action Command_CreateScrim(int client, int args) {
   kv.GoBack();
 
   char templateFile[PLATFORM_MAX_PATH + 1];
-  BuildPath(Path_SM, templateFile, sizeof(templateFile), "configs/get5/scrim_template.cfg");
+  BuildPath(Path_SM, templateFile, sizeof(templateFile), "configs/OpenPug/scrim_template.cfg");
   if (!kv.ImportFromFile(templateFile)) {
     delete kv;
     MatchConfigFail("Failed to read scrim template in %s", templateFile);
@@ -978,7 +978,7 @@ public Action Command_CreateScrim(int client, int args) {
 }
 
 public Action Command_Ringer(int client, int args) {
-  if (g_GameState == Get5State_None || !g_InScrimMode) {
+  if (g_GameState == OpenPugState_None || !g_InScrimMode) {
     ReplyToCommand(client, "This command can only be used in scrim mode");
     return Plugin_Handled;
   }

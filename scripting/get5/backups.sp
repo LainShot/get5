@@ -1,5 +1,5 @@
-#define TEMP_MATCHCONFIG_BACKUP_PATTERN "get5_match_config_backup%d.txt"
-#define TEMP_VALVE_BACKUP_PATTERN "get5_temp_backup%d.txt"
+#define TEMP_MATCHCONFIG_BACKUP_PATTERN "OpenPug_match_config_backup%d.txt"
+#define TEMP_VALVE_BACKUP_PATTERN "OpenPug_temp_backup%d.txt"
 
 public Action Command_LoadBackup(int client, int args) {
   if (!g_BackupSystemEnabledCvar.BoolValue) {
@@ -10,12 +10,12 @@ public Action Command_LoadBackup(int client, int args) {
   char path[PLATFORM_MAX_PATH];
   if (args >= 1 && GetCmdArg(1, path, sizeof(path))) {
     if (RestoreFromBackup(path)) {
-      Get5_MessageToAll("%t", "BackupLoadedInfoMessage", path);
+      OpenPug_MessageToAll("%t", "BackupLoadedInfoMessage", path);
     } else {
       ReplyToCommand(client, "Failed to load backup %s - check error logs", path);
     }
   } else {
-    ReplyToCommand(client, "Usage: get5_loadbackup <file>");
+    ReplyToCommand(client, "Usage: OpenPug_loadbackup <file>");
   }
 
   return Plugin_Handled;
@@ -34,7 +34,7 @@ public Action Command_ListBackups(int client, int args) {
   }
 
   char pattern[PLATFORM_MAX_PATH];
-  Format(pattern, sizeof(pattern), "get5_backup_match%s", matchID);
+  Format(pattern, sizeof(pattern), "OpenPug_backup_match%s", matchID);
 
   DirectoryListing files = OpenDirectory(".");
   if (files != null) {
@@ -60,15 +60,15 @@ public void WriteBackStructure(const char[] path) {
   char mapName[PLATFORM_MAX_PATH];
   GetCurrentMap(mapName, sizeof(mapName));
 
-  if (g_GameState == Get5State_Veto) {
-    kv.SetNum("gamestate", view_as<int>(Get5State_PreVeto));
-  } else if (g_GameState == Get5State_Warmup ||
-             g_GameState == Get5State_WaitingForKnifeRoundDecision ||
-             g_GameState == Get5State_KnifeRound || g_GameState == Get5State_GoingLive ||
-             g_GameState == Get5State_PostGame) {
-    kv.SetNum("gamestate", view_as<int>(Get5State_Warmup));
-  } else if (g_GameState == Get5State_Live) {
-    kv.SetNum("gamestate", view_as<int>(Get5State_Live));
+  if (g_GameState == OpenPugState_Veto) {
+    kv.SetNum("gamestate", view_as<int>(OpenPugState_PreVeto));
+  } else if (g_GameState == OpenPugState_Warmup ||
+             g_GameState == OpenPugState_WaitingForKnifeRoundDecision ||
+             g_GameState == OpenPugState_KnifeRound || g_GameState == OpenPugState_GoingLive ||
+             g_GameState == OpenPugState_PostGame) {
+    kv.SetNum("gamestate", view_as<int>(OpenPugState_Warmup));
+  } else if (g_GameState == OpenPugState_Live) {
+    kv.SetNum("gamestate", view_as<int>(OpenPugState_Live));
   }
 
   kv.SetNum("team1_side", g_TeamSide[MatchTeam_Team1]);
@@ -110,7 +110,7 @@ public void WriteBackStructure(const char[] path) {
   // Write valve's backup format into the file.
   char lastBackup[PLATFORM_MAX_PATH];
   ConVar lastBackupCvar = FindConVar("mp_backup_round_file_last");
-  if (g_GameState == Get5State_Live && lastBackupCvar != null) {
+  if (g_GameState == OpenPugState_Live && lastBackupCvar != null) {
     lastBackupCvar.GetString(lastBackup, sizeof(lastBackup));
     KeyValues valveBackup = new KeyValues("valve_backup");
     if (valveBackup.ImportFromFile(lastBackup)) {
@@ -121,7 +121,7 @@ public void WriteBackStructure(const char[] path) {
     delete valveBackup;
   }
 
-  // Write the get5 stats into the file.
+  // Write the OpenPug stats into the file.
   kv.JumpToKey("stats", true);
   KvCopySubkeys(g_StatsKv, kv);
   kv.GoBack();
@@ -151,7 +151,7 @@ public bool RestoreFromBackup(const char[] path) {
   }
 
   kv.GetString("matchid", g_MatchID, sizeof(g_MatchID));
-  g_GameState = view_as<Get5State>(kv.GetNum("gamestate"));
+  g_GameState = view_as<OpenPugState>(kv.GetNum("gamestate"));
 
   g_TeamSide[MatchTeam_Team1] = kv.GetNum("team1_side");
   g_TeamSide[MatchTeam_Team2] = kv.GetNum("team2_side");
@@ -163,7 +163,7 @@ public bool RestoreFromBackup(const char[] path) {
   g_TeamSeriesScores[MatchTeam_Team2] = kv.GetNum("team2_series_score");
 
   char mapName[PLATFORM_MAX_PATH];
-  if (g_GameState > Get5State_Veto) {
+  if (g_GameState > OpenPugState_Veto) {
     if (kv.JumpToKey("maps")) {
       g_MapsToPlay.Clear();
       g_MapSides.Clear();
@@ -221,15 +221,15 @@ public bool RestoreFromBackup(const char[] path) {
 
   if (!StrEqual(currentMap, currentSeriesMap)) {
     ChangeMap(currentSeriesMap, 1.0);
-    g_WaitingForRoundBackup = (g_GameState >= Get5State_Live);
+    g_WaitingForRoundBackup = (g_GameState >= OpenPugState_Live);
 
   } else {
-    RestoreGet5Backup();
+    RestoreOpenPugBackup();
   }
 
   delete kv;
 
-  LogDebug("Calling Get5_OnBackupRestore");
+  LogDebug("Calling OpenPug_OnBackupRestore");
   Call_StartForward(g_OnBackupRestore);
   Call_Finish();
 
@@ -238,7 +238,7 @@ public bool RestoreFromBackup(const char[] path) {
   return true;
 }
 
-public void RestoreGet5Backup() {
+public void RestoreOpenPugBackup() {
   ExecCfg(g_LiveCfgCvar);
 
   if (g_SavedValveBackup) {
@@ -250,7 +250,7 @@ public void RestoreGet5Backup() {
     ServerCommand("mp_backup_restore_load_file \"%s\"", tempValveBackup);
     Pause();
     CreateTimer(0.1, Timer_FinishBackup);
-    ChangeState(Get5State_Live);
+    ChangeState(OpenPugState_Live);
   } else {
     SetStartingTeams();
     SetMatchTeamCvars();
@@ -260,7 +260,7 @@ public void RestoreGet5Backup() {
         CheckClientTeam(i);
     }
 
-    if (g_GameState == Get5State_Live) {
+    if (g_GameState == OpenPugState_Live) {
       EndWarmup();
       EndWarmup();
       ServerCommand("mp_restartgame 5");
@@ -285,7 +285,7 @@ public void DeleteOldBackups() {
   if (files != null) {
     char path[PLATFORM_MAX_PATH];
     while (files.GetNext(path, sizeof(path))) {
-      if (StrContains(path, "get5_backup_") == 0 &&
+      if (StrContains(path, "OpenPug_backup_") == 0 &&
           GetTime() - GetFileTime(path, FileTime_LastChange) >= maxTimeDifference) {
         DeleteFile(path);
       }

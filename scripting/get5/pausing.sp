@@ -1,5 +1,5 @@
 public bool Pauseable() {
-  return g_GameState >= Get5State_KnifeRound && g_PausingEnabledCvar.BoolValue;
+  return g_GameState >= OpenPugState_KnifeRound && g_PausingEnabledCvar.BoolValue;
 }
 
 public Action Command_TechPause(int client, int args) {
@@ -11,12 +11,12 @@ public Action Command_TechPause(int client, int args) {
 
   if (client == 0) {
     Pause();
-    Get5_MessageToAll("%t", "AdminForceTechPauseInfoMessage");
+    OpenPug_MessageToAll("%t", "AdminForceTechPauseInfoMessage");
     return Plugin_Handled;
   }
 
   Pause();
-  Get5_MessageToAll("%t", "MatchTechPausedByTeamMessage", client);
+  OpenPug_MessageToAll("%t", "MatchTechPausedByTeamMessage", client);
 
   return Plugin_Handled;
 }
@@ -32,7 +32,7 @@ public Action Command_Pause(int client, int args) {
     g_InExtendedPause = true;
 
     Pause();
-    Get5_MessageToAll("%t", "AdminForcePauseInfoMessage");
+    OpenPug_MessageToAll("%t", "AdminForcePauseInfoMessage");
     return Plugin_Handled;
   }
 
@@ -44,13 +44,13 @@ public Action Command_Pause(int client, int args) {
   }
 
   if (maxPauses > 0 && g_TeamPausesUsed[team] >= maxPauses && IsPlayerTeam(team)) {
-    Get5_Message(client, "%t", "MaxPausesUsedInfoMessage", maxPauses, pausePeriodString);
+    OpenPug_Message(client, "%t", "MaxPausesUsedInfoMessage", maxPauses, pausePeriodString);
     return Plugin_Handled;
   }
 
   int maxPauseTime = g_MaxPauseTimeCvar.IntValue;
   if (maxPauseTime > 0 && g_TeamPauseTimeUsed[team] >= maxPauseTime && IsPlayerTeam(team)) {
-    Get5_Message(client, "%t", "MaxPausesTimeUsedInfoMessage", maxPauseTime, pausePeriodString);
+    OpenPug_Message(client, "%t", "MaxPausesTimeUsedInfoMessage", maxPauseTime, pausePeriodString);
     return Plugin_Handled;
   }
 
@@ -60,7 +60,7 @@ public Action Command_Pause(int client, int args) {
   // If the pause will need explicit resuming, we will create a timer to poll the pause status.
   bool need_resume = Pause(g_FixedPauseTimeCvar.IntValue, MatchTeamToCSTeam(team));
   if (IsPlayer(client)) {
-    Get5_MessageToAll("%t", "MatchPausedByTeamMessage", client);
+    OpenPug_MessageToAll("%t", "MatchPausedByTeamMessage", client);
   }
 
   if (IsPlayerTeam(team)) {
@@ -78,10 +78,10 @@ public Action Command_Pause(int client, int args) {
     if (g_MaxPausesCvar.IntValue > 0) {
       int pausesLeft = g_MaxPausesCvar.IntValue - g_TeamPausesUsed[team];
       if (pausesLeft == 1 && g_MaxPausesCvar.IntValue > 0) {
-        Get5_MessageToAll("%t", "OnePauseLeftInfoMessage", g_FormattedTeamNames[team], pausesLeft,
+        OpenPug_MessageToAll("%t", "OnePauseLeftInfoMessage", g_FormattedTeamNames[team], pausesLeft,
                           pausePeriodString);
       } else if (g_MaxPausesCvar.IntValue > 0) {
-        Get5_MessageToAll("%t", "PausesLeftInfoMessage", g_FormattedTeamNames[team], pausesLeft,
+        OpenPug_MessageToAll("%t", "PausesLeftInfoMessage", g_FormattedTeamNames[team], pausesLeft,
                           pausePeriodString);
       }
     }
@@ -114,15 +114,15 @@ public Action Timer_PauseTimeCheck(Handle timer, int data) {
     g_TeamPauseTimeUsed[team]++;
 
     if (timeLeft == 10) {
-      Get5_MessageToAll("%t", "PauseTimeExpiration10SecInfoMessage", g_FormattedTeamNames[team]);
+      OpenPug_MessageToAll("%t", "PauseTimeExpiration10SecInfoMessage", g_FormattedTeamNames[team]);
     } else if (timeLeft % 30 == 0) {
-      Get5_MessageToAll("%t", "PauseTimeExpirationInfoMessage", g_FormattedTeamNames[team],
+      OpenPug_MessageToAll("%t", "PauseTimeExpirationInfoMessage", g_FormattedTeamNames[team],
                         timeLeft, pausePeriodString);
     }
   }
 
   if (timeLeft <= 0) {
-    Get5_MessageToAll("%t", "PauseRunoutInfoMessage", g_FormattedTeamNames[team]);
+    OpenPug_MessageToAll("%t", "PauseRunoutInfoMessage", g_FormattedTeamNames[team]);
     Unpause();
     return Plugin_Stop;
   }
@@ -137,7 +137,7 @@ public Action Command_Unpause(int client, int args) {
   // Let console force unpause
   if (client == 0) {
     Unpause();
-    Get5_MessageToAll("%t", "AdminForceUnPauseInfoMessage");
+    OpenPug_MessageToAll("%t", "AdminForceUnPauseInfoMessage");
     return Plugin_Handled;
   }
 
@@ -151,13 +151,13 @@ public Action Command_Unpause(int client, int args) {
   if (g_TeamReadyForUnpause[MatchTeam_Team1] && g_TeamReadyForUnpause[MatchTeam_Team2]) {
     Unpause();
     if (IsPlayer(client)) {
-      Get5_MessageToAll("%t", "MatchUnpauseInfoMessage", client);
+      OpenPug_MessageToAll("%t", "MatchUnpauseInfoMessage", client);
     }
   } else if (g_TeamReadyForUnpause[MatchTeam_Team1] && !g_TeamReadyForUnpause[MatchTeam_Team2]) {
-    Get5_MessageToAll("%t", "WaitingForUnpauseInfoMessage", g_FormattedTeamNames[MatchTeam_Team1],
+    OpenPug_MessageToAll("%t", "WaitingForUnpauseInfoMessage", g_FormattedTeamNames[MatchTeam_Team1],
                       g_FormattedTeamNames[MatchTeam_Team2]);
   } else if (!g_TeamReadyForUnpause[MatchTeam_Team1] && g_TeamReadyForUnpause[MatchTeam_Team2]) {
-    Get5_MessageToAll("%t", "WaitingForUnpauseInfoMessage", g_FormattedTeamNames[MatchTeam_Team2],
+    OpenPug_MessageToAll("%t", "WaitingForUnpauseInfoMessage", g_FormattedTeamNames[MatchTeam_Team2],
                       g_FormattedTeamNames[MatchTeam_Team1]);
   }
 

@@ -1,18 +1,18 @@
-#if defined _get5_included_
+#if defined _OpenPug_included_
 #endinput
 #endif
-#define _get5_included_
+#define _OpenPug_included_
 
-enum Get5State {
-  Get5State_None,                          // no setup has taken place
-  Get5State_PreVeto,                       // warmup, waiting for the veto
-  Get5State_Veto,                          // warmup, doing the veto
-  Get5State_Warmup,                        // setup done, waiting for players to ready up
-  Get5State_KnifeRound,                    // in the knife round
-  Get5State_WaitingForKnifeRoundDecision,  // waiting for a .stay/.swap command after the knife
-  Get5State_GoingLive,                     // in the lo3 process
-  Get5State_Live,                          // the match is live
-  Get5State_PostGame,                      // postgame screen + waiting for GOTV to finish broadcast
+enum OpenPugState {
+  OpenPugState_None,                          // no setup has taken place
+  OpenPugState_PreVeto,                       // warmup, waiting for the veto
+  OpenPugState_Veto,                          // warmup, doing the veto
+  OpenPugState_Warmup,                        // setup done, waiting for players to ready up
+  OpenPugState_KnifeRound,                    // in the knife round
+  OpenPugState_WaitingForKnifeRoundDecision,  // waiting for a .stay/.swap command after the knife
+  OpenPugState_GoingLive,                     // in the lo3 process
+  OpenPugState_Live,                          // the match is live
+  OpenPugState_PostGame,                      // postgame screen + waiting for GOTV to finish broadcast
 };
 
 #define MATCHTEAM_COUNT 4
@@ -38,117 +38,117 @@ enum SideChoice {
   SideChoice_KnifeRound,  // There will be a knife round to choose sides
 };
 
-// Called each get5-event with JSON formatted event text.
-forward void Get5_OnEvent(const char[] eventJson);
+// Called each OpenPug-event with JSON formatted event text.
+forward void OpenPug_OnEvent(const char[] eventJson);
 
 // Called when a series is first setup.
 // Note: do not rely on the state of any cvars at this point.
-forward void Get5_OnSeriesInit();
+forward void OpenPug_OnSeriesInit();
 
 // Called each time in a match when a map is going live.
 // The mapNumber parameter starts at 0.
-forward void Get5_OnGoingLive(int mapNumber);
+forward void OpenPug_OnGoingLive(int mapNumber);
 
 // Called whenever the gamestate phase is changed.
-forward void Get5_OnGameStateChanged(Get5State oldState, Get5State newState);
+forward void OpenPug_OnGameStateChanged(OpenPugState oldState, OpenPugState newState);
 
 // Called when the stats for the last round have been updated.
-forward void Get5_OnRoundStatsUpdated();
+forward void OpenPug_OnRoundStatsUpdated();
 
 // Called at the end of a map in a series.
-forward void Get5_OnMapResult(const char[] map, MatchTeam mapWinner, int team1Score, int team2Score,
+forward void OpenPug_OnMapResult(const char[] map, MatchTeam mapWinner, int team1Score, int team2Score,
                               int mapNumber);
 
 // Called at the end of a full match.
-// Note: both Get5_OnMapResult and Get5_OnSeriesResult are called on the last map of a series.
-forward void Get5_OnSeriesResult(MatchTeam seriesWinner, int team1MapScore, int team2MapScore);
+// Note: both OpenPug_OnMapResult and OpenPug_OnSeriesResult are called on the last map of a series.
+forward void OpenPug_OnSeriesResult(MatchTeam seriesWinner, int team1MapScore, int team2MapScore);
 
-forward void Get5_OnPreLoadMatchConfig(const char[] filePath);
+forward void OpenPug_OnPreLoadMatchConfig(const char[] filePath);
 
 // Called when a match config fails to load.
-forward void Get5_OnLoadMatchConfigFailed(const char[] reason);
+forward void OpenPug_OnLoadMatchConfigFailed(const char[] reason);
 
 // Called when a team vetoes a map.
-forward void Get5_OnMapVetoed(MatchTeam team, const char[] map);
+forward void OpenPug_OnMapVetoed(MatchTeam team, const char[] map);
 
 // Called when a team selects a map.
 // The team parameter will be MatchTeam_TeamNone if the map was selected as the last remaining map
 // and not by one of the teams specifically.
-forward void Get5_OnMapPicked(MatchTeam team, const char[] map);
+forward void OpenPug_OnMapPicked(MatchTeam team, const char[] map);
 
 // Called when a team selects a side.
-forward void Get5_OnSidePicked(MatchTeam team, const char[] map, int side);
+forward void OpenPug_OnSidePicked(MatchTeam team, const char[] map, int side);
 
 // Called when a demo finishes recording.
-forward void Get5_OnDemoFinished(const char[] filename);
+forward void OpenPug_OnDemoFinished(const char[] filename);
 
 // Called when a match backup is restored.
-forward void Get5_OnBackupRestore();
+forward void OpenPug_OnBackupRestore();
 
 // Returns the current pug gamestate.
-native Get5State Get5_GetGameState();
+native OpenPugState OpenPug_GetGameState();
 
 // Prints a plugin-formatted message to a client.
-native void Get5_Message(int client, const char[] format, any:...);
+native void OpenPug_Message(int client, const char[] format, any:...);
 
 // Prints a plugin-formatted message to a team.
-native void Get5_MessageToTeam(MatchTeam team, const char[] format, any:...);
+native void OpenPug_MessageToTeam(MatchTeam team, const char[] format, any:...);
 
 // Prints a plugin-formatted message to all clients.
-native void Get5_MessageToAll(const char[] format, any:...);
+native void OpenPug_MessageToAll(const char[] format, any:...);
 
 // Loads a match config (keyvalues or JSON) from a local file.
 // Returns true if the config was successfully loaded.
-native bool Get5_LoadMatchConfig(const char[] filename);
+native bool OpenPug_LoadMatchConfig(const char[] filename);
 
 // Loads a match config by downloading a remote config via a HTTP GET request.
 // Request parameters should be left out of the url and put into the optional ArrayLists parameters.
-native bool Get5_LoadMatchConfigFromURL(const char[] url, ArrayList paramNames = null,
+native bool OpenPug_LoadMatchConfigFromURL(const char[] url, ArrayList paramNames = null,
                                         ArrayList paramValues = null);
 
 // Adds a player to a match team. You can optionally force set a player name here as well.
 // Returns if they were successfully added.
-native bool Get5_AddPlayerToTeam(const char[] steamId, MatchTeam team,
+native bool OpenPug_AddPlayerToTeam(const char[] steamId, MatchTeam team,
                                  const char[] playerName = "");
 
 // Force sets a steam64 to map to a specified playername
-native bool Get5_SetPlayerName(const char[] steamId, const char[] playerName);
+native bool OpenPug_SetPlayerName(const char[] steamId, const char[] playerName);
 
 // Removes a player from all match teams.
 // Returns if they were successfully removed (false if not round).
-native bool Get5_RemovePlayerFromTeam(const char[] steamId);
+native bool OpenPug_RemovePlayerFromTeam(const char[] steamId);
 
 // Returns the current match team a auth is mapped to.
-native MatchTeam Get5_GetPlayerTeam(const char[] steamId);
+native MatchTeam OpenPug_GetPlayerTeam(const char[] steamId);
 
 // Translates a CS team (CS_TEAM_T, etc.) to a Match team.
-native MatchTeam Get5_CSTeamToMatchTeam(int csTeam);
+native MatchTeam OpenPug_CSTeamToMatchTeam(int csTeam);
 
 // Translate da MatchTeam to a CS team.
-native int Get5_MatchTeamToCSTeam(MatchTeam team);
+native int OpenPug_MatchTeamToCSTeam(MatchTeam team);
 
 // Gets the scores for a match team.
-native void Get5_GetTeamScores(MatchTeam team, int& seriesScore, int& currentMapScore);
+native void OpenPug_GetTeamScores(MatchTeam team, int& seriesScore, int& currentMapScore);
 
 // Gets the current matchid.
-native void Get5_GetMatchID(char[] id, int length);
+native void OpenPug_GetMatchID(char[] id, int length);
 
 // Sets the current matchid.
-native void Get5_SetMatchID(const char[] id);
+native void OpenPug_SetMatchID(const char[] id);
 
 // Adds a cvar to be set when going live. If the cvar is already in the cvars for the match, the new
 // value will replace the old value if the override parameter is true.
 // Note: this should only be used when a match config loaded.
-native void Get5_AddLiveCvar(const char[] name, const char[] value, bool override = true);
+native void OpenPug_AddLiveCvar(const char[] name, const char[] value, bool override = true);
 
 // Copies the current series stats into the passed KeyValues structure.
 // Below are the keys used for stats in the kv copied.
 // The caller is responsible for creating and deleting a KeyValues
 // object if using this method.
-native bool Get5_GetMatchStats(KeyValues kv);
+native bool OpenPug_GetMatchStats(KeyValues kv);
 
 // Increases an (integer-typed) player statistic in the plugin's stats keyvalue structure.
-native int Get5_IncreasePlayerStat(int client, const char[] statName, int amount = 1);
+native int OpenPug_IncreasePlayerStat(int client, const char[] statName, int amount = 1);
 
 // Series stats (root section)
 #define STAT_SERIESWINNER "winner"
@@ -195,8 +195,8 @@ native int Get5_IncreasePlayerStat(int client, const char[] statName, int amount
 #define STAT_TRADEKILL "tradekill"
 #define STAT_CONTRIBUTION_SCORE "contribution_score"
 
-public SharedPlugin __pl_get5 = {
-    name = "get5", file = "get5.smx",
+public SharedPlugin __pl_OpenPug = {
+    name = "OpenPug", file = "OpenPug.smx",
 #if defined REQUIRE_PLUGIN
     required = 1,
 #else
@@ -205,24 +205,24 @@ public SharedPlugin __pl_get5 = {
 };
 
 #if !defined REQUIRE_PLUGIN
-public __pl_get5_SetNTVOptional() {
-  MarkNativeAsOptional("Get5_GetGameState");
-  MarkNativeAsOptional("Get5_Message");
-  MarkNativeAsOptional("Get5_MessageToTeam");
-  MarkNativeAsOptional("Get5_MessageToAll");
-  MarkNativeAsOptional("Get5_LoadMatchConfig");
-  MarkNativeAsOptional("Get5_LoadMatchConfigFromURL");
-  MarkNativeAsOptional("Get5_AddPlayerToTeam");
-  MarkNativeAsOptional("Get5_SetPlayerName");
-  MarkNativeAsOptional("Get5_RemovePlayerFromTeam");
-  MarkNativeAsOptional("Get5_GetPlayerTeam");
-  MarkNativeAsOptional("Get5_CSTeamToMatchTeam");
-  MarkNativeAsOptional("Get5_MatchTeamToCSTeam");
-  MarkNativeAsOptional("Get5_GetTeamScores");
-  MarkNativeAsOptional("Get5_GetMatchID");
-  MarkNativeAsOptional("Get5_SetMatchID");
-  MarkNativeAsOptional("Get5_AddLiveCvar");
-  MarkNativeAsOptional("Get5_IncreasePlayerStat");
-  MarkNativeAsOptional("Get5_GetMatchStats");
+public __pl_OpenPug_SetNTVOptional() {
+  MarkNativeAsOptional("OpenPug_GetGameState");
+  MarkNativeAsOptional("OpenPug_Message");
+  MarkNativeAsOptional("OpenPug_MessageToTeam");
+  MarkNativeAsOptional("OpenPug_MessageToAll");
+  MarkNativeAsOptional("OpenPug_LoadMatchConfig");
+  MarkNativeAsOptional("OpenPug_LoadMatchConfigFromURL");
+  MarkNativeAsOptional("OpenPug_AddPlayerToTeam");
+  MarkNativeAsOptional("OpenPug_SetPlayerName");
+  MarkNativeAsOptional("OpenPug_RemovePlayerFromTeam");
+  MarkNativeAsOptional("OpenPug_GetPlayerTeam");
+  MarkNativeAsOptional("OpenPug_CSTeamToMatchTeam");
+  MarkNativeAsOptional("OpenPug_MatchTeamToCSTeam");
+  MarkNativeAsOptional("OpenPug_GetTeamScores");
+  MarkNativeAsOptional("OpenPug_GetMatchID");
+  MarkNativeAsOptional("OpenPug_SetMatchID");
+  MarkNativeAsOptional("OpenPug_AddLiveCvar");
+  MarkNativeAsOptional("OpenPug_IncreasePlayerStat");
+  MarkNativeAsOptional("OpenPug_GetMatchStats");
 }
 #endif

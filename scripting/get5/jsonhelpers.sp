@@ -135,7 +135,7 @@ stock int AddJsonAuthsToList(JSON_Object json, const char[] key, ArrayList list,
         data.GetString(buffer, name, sizeof(name));
         char steam64[AUTH_LENGTH];
         if (ConvertAuthToSteam64(buffer, steam64)) {
-          Get5_SetPlayerName(steam64, name);
+          OpenPug_SetPlayerName(steam64, name);
           list.PushString(steam64);
           count++;
         }

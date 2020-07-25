@@ -1,25 +1,25 @@
 // See include/pugsetup.inc for documentation.
 
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max) {
-  CreateNative("Get5_GetGameState", Native_GetGameState);
-  CreateNative("Get5_Message", Native_Message);
-  CreateNative("Get5_MessageToTeam", Native_MessageToTeam);
-  CreateNative("Get5_MessageToAll", Native_MessageToAll);
-  CreateNative("Get5_LoadMatchConfig", Native_LoadMatchConfig);
-  CreateNative("Get5_LoadMatchConfigFromURL", Native_LoadMatchConfigFromURL);
-  CreateNative("Get5_AddPlayerToTeam", Native_AddPlayerToTeam);
-  CreateNative("Get5_SetPlayerName", Native_SetPlayerName);
-  CreateNative("Get5_RemovePlayerFromTeam", Native_RemovePlayerFromTeam);
-  CreateNative("Get5_GetPlayerTeam", Native_GetPlayerTeam);
-  CreateNative("Get5_CSTeamToMatchTeam", Native_CSTeamToMatchTeam);
-  CreateNative("Get5_MatchTeamToCSTeam", Native_MatchTeamToCSTeam);
-  CreateNative("Get5_GetTeamScores", Native_GetTeamScores);
-  CreateNative("Get5_GetMatchID", Native_GetMatchID);
-  CreateNative("Get5_SetMatchID", Native_SetMatchID);
-  CreateNative("Get5_AddLiveCvar", Native_AddLiveCvar);
-  CreateNative("Get5_IncreasePlayerStat", Native_IncreasePlayerStat);
-  CreateNative("Get5_GetMatchStats", Native_GetMatchStats);
-  RegPluginLibrary("get5");
+  CreateNative("OpenPug_GetGameState", Native_GetGameState);
+  CreateNative("OpenPug_Message", Native_Message);
+  CreateNative("OpenPug_MessageToTeam", Native_MessageToTeam);
+  CreateNative("OpenPug_MessageToAll", Native_MessageToAll);
+  CreateNative("OpenPug_LoadMatchConfig", Native_LoadMatchConfig);
+  CreateNative("OpenPug_LoadMatchConfigFromURL", Native_LoadMatchConfigFromURL);
+  CreateNative("OpenPug_AddPlayerToTeam", Native_AddPlayerToTeam);
+  CreateNative("OpenPug_SetPlayerName", Native_SetPlayerName);
+  CreateNative("OpenPug_RemovePlayerFromTeam", Native_RemovePlayerFromTeam);
+  CreateNative("OpenPug_GetPlayerTeam", Native_GetPlayerTeam);
+  CreateNative("OpenPug_CSTeamToMatchTeam", Native_CSTeamToMatchTeam);
+  CreateNative("OpenPug_MatchTeamToCSTeam", Native_MatchTeamToCSTeam);
+  CreateNative("OpenPug_GetTeamScores", Native_GetTeamScores);
+  CreateNative("OpenPug_GetMatchID", Native_GetMatchID);
+  CreateNative("OpenPug_SetMatchID", Native_SetMatchID);
+  CreateNative("OpenPug_AddLiveCvar", Native_AddLiveCvar);
+  CreateNative("OpenPug_IncreasePlayerStat", Native_IncreasePlayerStat);
+  CreateNative("OpenPug_GetMatchStats", Native_GetMatchStats);
+  RegPluginLibrary("OpenPug");
   return APLRes_Success;
 }
 

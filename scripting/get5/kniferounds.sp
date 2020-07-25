@@ -2,7 +2,7 @@ public Action StartKnifeRound(Handle timer) {
   g_HasKnifeRoundStarted = false;
   g_PendingSideSwap = false;
 
-  Get5_MessageToAll("%t", "KnifeIn5SecInfoMessage");
+  OpenPug_MessageToAll("%t", "KnifeIn5SecInfoMessage");
   if (InWarmup()) {
     EndWarmup(5);
   } else {
@@ -15,7 +15,7 @@ public Action StartKnifeRound(Handle timer) {
 
 public Action Timer_AnnounceKnife(Handle timer) {
   for (int i = 0; i < 5; i++) {
-    Get5_MessageToAll("%t", "KnifeInfoMessage");
+    OpenPug_MessageToAll("%t", "KnifeInfoMessage");
   }
 
   g_HasKnifeRoundStarted = true;
@@ -55,12 +55,12 @@ static void PerformSideSwap(bool swap) {
 public void EndKnifeRound(bool swap) {
   PerformSideSwap(swap);
   EventLogger_KnifeWon(g_KnifeWinnerTeam, swap);
-  ChangeState(Get5State_GoingLive);
+  ChangeState(OpenPugState_GoingLive);
   CreateTimer(3.0, StartGoingLive, _, TIMER_FLAG_NO_MAPCHANGE);
 }
 
 static bool AwaitingKnifeDecision(int client) {
-  bool waiting = g_GameState == Get5State_WaitingForKnifeRoundDecision;
+  bool waiting = g_GameState == OpenPugState_WaitingForKnifeRoundDecision;
   bool onWinningTeam = IsPlayer(client) && GetClientMatchTeam(client) == g_KnifeWinnerTeam;
   bool admin = (client == 0);
   return waiting && (onWinningTeam || admin);
@@ -69,7 +69,7 @@ static bool AwaitingKnifeDecision(int client) {
 public Action Command_Stay(int client, int args) {
   if (AwaitingKnifeDecision(client)) {
     EndKnifeRound(false);
-    Get5_MessageToAll("%t", "TeamDecidedToStayInfoMessage",
+    OpenPug_MessageToAll("%t", "TeamDecidedToStayInfoMessage",
                       g_FormattedTeamNames[g_KnifeWinnerTeam]);
   }
   return Plugin_Handled;
@@ -78,9 +78,9 @@ public Action Command_Stay(int client, int args) {
 public Action Command_Swap(int client, int args) {
   if (AwaitingKnifeDecision(client)) {
     EndKnifeRound(true);
-    Get5_MessageToAll("%t", "TeamDecidedToSwapInfoMessage",
+    OpenPug_MessageToAll("%t", "TeamDecidedToSwapInfoMessage",
                       g_FormattedTeamNames[g_KnifeWinnerTeam]);
-  } else if (g_GameState == Get5State_Warmup && g_InScrimMode &&
+  } else if (g_GameState == OpenPugState_Warmup && g_InScrimMode &&
              GetClientMatchTeam(client) == MatchTeam_Team1) {
     PerformSideSwap(true);
   }
@@ -113,9 +113,9 @@ public Action Command_T(int client, int args) {
 }
 
 public Action Timer_ForceKnifeDecision(Handle timer) {
-  if (g_GameState == Get5State_WaitingForKnifeRoundDecision) {
+  if (g_GameState == OpenPugState_WaitingForKnifeRoundDecision) {
     EndKnifeRound(false);
-    Get5_MessageToAll("%t", "TeamLostTimeToDecideInfoMessage",
+    OpenPug_MessageToAll("%t", "TeamLostTimeToDecideInfoMessage",
                       g_FormattedTeamNames[g_KnifeWinnerTeam]);
   }
 }

@@ -17,15 +17,15 @@ static void EventLogger_LogEvent(const char[] eventName, JSON_Object params) {
     LogError("Event JSON too long (%d characters, %d max): %s", eventName, strlen(buffer),
              kMaxCharacters);
   } else {
-    LogDebug("get5_event: %s", buffer);
-    LogToGame("get5_event: %s", buffer);
+    LogDebug("OpenPug_event: %s", buffer);
+    LogToGame("OpenPug_event: %s", buffer);
 
     char logPath[PLATFORM_MAX_PATH];
     if (FormatCvarString(g_EventLogFormatCvar, logPath, sizeof(logPath))) {
       LogToFileEx(logPath, buffer);
     }
 
-    LogDebug("Calling Get5_OnEvent(event name = %s)", eventName);
+    LogDebug("Calling OpenPug_OnEvent(event name = %s)", eventName);
     Call_StartForward(g_OnEvent);
     Call_PushString(buffer);
     Call_Finish();

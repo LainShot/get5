@@ -5,12 +5,12 @@ public Action Command_DebugInfo(int client, int args) {
   char path[PLATFORM_MAX_PATH + 1];
 
   if (args == 0 || !GetCmdArg(1, path, sizeof(path))) {
-    BuildPath(Path_SM, path, sizeof(path), "logs/get5_debuginfo.txt");
+    BuildPath(Path_SM, path, sizeof(path), "logs/OpenPug_debuginfo.txt");
   }
 
   File f = OpenFile(path, "w");
   if (f == null) {
-    LogError("Failed to open get5_debug.txt for writing");
+    LogError("Failed to open OpenPug_debug.txt for writing");
     return Plugin_Handled;
   }
 
@@ -22,7 +22,7 @@ public Action Command_DebugInfo(int client, int args) {
   AddSpacing(f);
   AddLogLines(f, "errors_", 50);
   AddSpacing(f);
-  AddLogLines(f, "get5_debug.log", 200);
+  AddLogLines(f, "OpenPug_debug.log", 200);
   AddSpacing(f);
   AddPluginList(f);
 
@@ -81,7 +81,7 @@ static void AddVersionInfo(File f) {
   WriteCvarString(f, "sourcemod_version");
   WriteCvarString(f, "metamod_version");
 #if defined COMMIT_STRING
-  f.WriteLine("get5 git commit: %s", COMMIT_STRING);
+  f.WriteLine("OpenPug git commit: %s", COMMIT_STRING);
 #endif
 }
 
@@ -139,18 +139,18 @@ static void AddGlobalStateInfo(File f) {
 
 static void AddInterestingCvars(File f) {
   f.WriteLine("Interesting cvars:");
-  WriteCvarString(f, "get5_allow_technical_pause");
-  WriteCvarString(f, "get5_autoload_config");
-  WriteCvarString(f, "get5_check_auths");
-  WriteCvarString(f, "get5_fixed_pause_time");
-  WriteCvarString(f, "get5_kick_when_no_match_loaded");
-  WriteCvarString(f, "get5_live_cfg");
-  WriteCvarString(f, "get5_max_pause_time");
-  WriteCvarString(f, "get5_max_pauses");
-  WriteCvarString(f, "get5_mysql_force_matchid");
-  WriteCvarString(f, "get5_pausing_enabled");
-  WriteCvarString(f, "get5_reset_pauses_each_half");
-  WriteCvarString(f, "get5_web_api_url");
+  WriteCvarString(f, "OpenPug_allow_technical_pause");
+  WriteCvarString(f, "OpenPug_autoload_config");
+  WriteCvarString(f, "OpenPug_check_auths");
+  WriteCvarString(f, "OpenPug_fixed_pause_time");
+  WriteCvarString(f, "OpenPug_kick_when_no_match_loaded");
+  WriteCvarString(f, "OpenPug_live_cfg");
+  WriteCvarString(f, "OpenPug_max_pause_time");
+  WriteCvarString(f, "OpenPug_max_pauses");
+  WriteCvarString(f, "OpenPug_mysql_force_matchid");
+  WriteCvarString(f, "OpenPug_pausing_enabled");
+  WriteCvarString(f, "OpenPug_reset_pauses_each_half");
+  WriteCvarString(f, "OpenPug_web_api_url");
   WriteCvarString(f, "mp_freezetime");
   WriteCvarString(f, "mp_halftime");
   WriteCvarString(f, "mp_halftime_duration");

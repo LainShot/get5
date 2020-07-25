@@ -8,7 +8,7 @@ public void ResetReadyStatus() {
 }
 
 public bool IsReadyGameState() {
-  return g_GameState == Get5State_PreVeto || g_GameState == Get5State_Warmup;
+  return g_GameState == OpenPugState_PreVeto || g_GameState == OpenPugState_Warmup;
 }
 
 // Client ready status
@@ -54,7 +54,7 @@ public bool IsSpectatorsReady() {
 }
 
 public bool IsTeamReady(MatchTeam team) {
-  if (g_GameState == Get5State_Live) {
+  if (g_GameState == OpenPugState_Live) {
     return true;
   }
 
@@ -126,7 +126,7 @@ public Action Command_AdminForceReady(int client, int args) {
     return Plugin_Handled;
   }
 
-  Get5_MessageToAll("%t", "AdminForceReadyInfoMessage");
+  OpenPug_MessageToAll("%t", "AdminForceReadyInfoMessage");
   SetAllTeamsForcedReady(true);
   SetAllClientsReady(true);
   SetMatchTeamCvars();
@@ -142,7 +142,7 @@ public Action Command_Ready(int client, int args) {
     return Plugin_Handled;
   }
 
-  Get5_Message(client, "%t", "YouAreReady");
+  OpenPug_Message(client, "%t", "YouAreReady");
 
   SetClientReady(client, true);
   if (IsTeamReady(team)) {
@@ -159,14 +159,14 @@ public Action Command_NotReady(int client, int args) {
     return Plugin_Handled;
   }
 
-  Get5_Message(client, "%t", "YouAreNotReady");
+  OpenPug_Message(client, "%t", "YouAreNotReady");
 
   bool teamWasReady = IsTeamReady(team);
   SetClientReady(client, false);
   SetTeamForcedReady(team, false);
   if (teamWasReady) {
     SetMatchTeamCvars();
-    Get5_MessageToAll("%t", "TeamNotReadyInfoMessage", g_FormattedTeamNames[team]);
+    OpenPug_MessageToAll("%t", "TeamNotReadyInfoMessage", g_FormattedTeamNames[team]);
     EventLogger_TeamUnready(team);
   }
 
@@ -183,14 +183,14 @@ public Action Command_ForceReadyClient(int client, int args) {
   int playerCount = GetTeamPlayerCount(team);
 
   if (playerCount < minReady) {
-    Get5_Message(client, "%t", "TeamFailToReadyMinPlayerCheck", minReady);
+    OpenPug_Message(client, "%t", "TeamFailToReadyMinPlayerCheck", minReady);
     return Plugin_Handled;
   }
 
   LOOP_CLIENTS(i) {
     if (IsPlayer(i) && GetClientMatchTeam(i) == team) {
       SetClientReady(i, true);
-      Get5_Message(i, "%t", "TeammateForceReadied", client);
+      OpenPug_Message(i, "%t", "TeammateForceReadied", client);
     }
   }
   SetTeamForcedReady(team, true);
@@ -205,19 +205,19 @@ public Action Command_ForceReadyClient(int client, int args) {
 static void HandleReadyMessage(MatchTeam team) {
   CheckTeamNameStatus(team);
 
-  if (g_GameState == Get5State_PreVeto) {
-    Get5_MessageToAll("%t", "TeamReadyToVetoInfoMessage", g_FormattedTeamNames[team]);
+  if (g_GameState == OpenPugState_PreVeto) {
+    OpenPug_MessageToAll("%t", "TeamReadyToVetoInfoMessage", g_FormattedTeamNames[team]);
     EventLogger_TeamReady(team, "veto");
-  } else if (g_GameState == Get5State_Warmup) {
+  } else if (g_GameState == OpenPugState_Warmup) {
     SideChoice sides = view_as<SideChoice>(g_MapSides.Get(GetMapNumber()));
     if (g_WaitingForRoundBackup) {
-      Get5_MessageToAll("%t", "TeamReadyToRestoreBackupInfoMessage", g_FormattedTeamNames[team]);
+      OpenPug_MessageToAll("%t", "TeamReadyToRestoreBackupInfoMessage", g_FormattedTeamNames[team]);
       EventLogger_TeamReady(team, "backup_restore");
     } else if (sides == SideChoice_KnifeRound) {
-      Get5_MessageToAll("%t", "TeamReadyToKnifeInfoMessage", g_FormattedTeamNames[team]);
+      OpenPug_MessageToAll("%t", "TeamReadyToKnifeInfoMessage", g_FormattedTeamNames[team]);
       EventLogger_TeamReady(team, "knife");
     } else {
-      Get5_MessageToAll("%t", "TeamReadyToBeginInfoMessage", g_FormattedTeamNames[team]);
+      OpenPug_MessageToAll("%t", "TeamReadyToBeginInfoMessage", g_FormattedTeamNames[team]);
       EventLogger_TeamReady(team, "start");
     }
   }
@@ -240,7 +240,7 @@ public void MissingPlayerInfoMessageTeam(MatchTeam team) {
   int readyCount = GetTeamReadyCount(team);
 
   if (playerCount == readyCount && playerCount < minPlayers && readyCount >= minReady) {
-    Get5_MessageToTeam(team, "%t", "ForceReadyInfoMessage", minPlayers);
+    OpenPug_MessageToTeam(team, "%t", "ForceReadyInfoMessage", minPlayers);
   }
 }
 
@@ -248,7 +248,7 @@ public void MissingPlayerInfoMessageTeam(MatchTeam team) {
 
 public void UpdateClanTags() {
   if (!g_SetClientClanTagCvar.BoolValue) {
-    LogMessage("Not setting client clang tags because get5_set_client_clan_tags is 0");
+    LogMessage("Not setting client clang tags because OpenPug_set_client_clan_tags is 0");
     return;
   }
 

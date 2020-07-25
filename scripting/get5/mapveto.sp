@@ -27,27 +27,27 @@ public Action Timer_VetoCountdown(Handle timer) {
   } else {
     warningsPrinted++;
     int secondsRemaining = g_VetoCountdownCvar.IntValue - warningsPrinted + 1;
-    Get5_MessageToAll("%t", "VetoCountdown", secondsRemaining);
+    OpenPug_MessageToAll("%t", "VetoCountdown", secondsRemaining);
     return Plugin_Continue;
   }
 }
 
 static void AbortVeto() {
-  Get5_MessageToAll("%t", "CaptainLeftOnVetoInfoMessage");
-  Get5_MessageToAll("%t", "ReadyToResumeVetoInfoMessage");
-  ChangeState(Get5State_PreVeto);
+  OpenPug_MessageToAll("%t", "CaptainLeftOnVetoInfoMessage");
+  OpenPug_MessageToAll("%t", "ReadyToResumeVetoInfoMessage");
+  ChangeState(OpenPugState_PreVeto);
 }
 
 public void VetoFinished() {
-  ChangeState(Get5State_Warmup);
-  Get5_MessageToAll("%t", "MapDecidedInfoMessage");
+  ChangeState(OpenPugState_Warmup);
+  OpenPug_MessageToAll("%t", "MapDecidedInfoMessage");
 
   // Use total series score as starting point, to not print skipped maps
   int seriesScore = g_TeamSeriesScores[MatchTeam_Team1] + g_TeamSeriesScores[MatchTeam_Team2];
   for (int i = seriesScore; i < g_MapsToPlay.Length; i++) {
     char map[PLATFORM_MAX_PATH];
     g_MapsToPlay.GetString(i, map, sizeof(map));
-    Get5_MessageToAll("%t", "MapIsInfoMessage", i + 1 - seriesScore, map);
+    OpenPug_MessageToAll("%t", "MapIsInfoMessage", i + 1 - seriesScore, map);
   }
 
   g_MapChangePending = true;
@@ -158,7 +158,7 @@ public void VetoController(int client) {
 
     EventLogger_MapPicked(MatchTeam_TeamNone, mapName, g_MapsToPlay.Length - 1);
 
-    LogDebug("Calling Get5_OnMapPicked(team=%d, map=%s)", MatchTeam_TeamNone, mapName);
+    LogDebug("Calling OpenPug_OnMapPicked(team=%d, map=%s)", MatchTeam_TeamNone, mapName);
     Call_StartForward(g_OnMapPicked);
     Call_PushCell(MatchTeam_TeamNone);
     Call_PushString(mapName);
@@ -272,11 +272,11 @@ public int MapVetoMenuHandler(Menu menu, MenuAction action, int param1, int para
 
     RemoveStringFromArray(g_MapsLeftInVetoPool, mapName);
 
-    Get5_MessageToAll("%t", "TeamVetoedMapInfoMessage", g_FormattedTeamNames[team], mapName);
+    OpenPug_MessageToAll("%t", "TeamVetoedMapInfoMessage", g_FormattedTeamNames[team], mapName);
 
     EventLogger_MapVetoed(team, mapName);
 
-    LogDebug("Calling Get5_OnMapVetoed(team=%d, map=%s)", team, mapName);
+    LogDebug("Calling OpenPug_OnMapVetoed(team=%d, map=%s)", team, mapName);
     Call_StartForward(g_OnMapVetoed);
     Call_PushCell(team);
     Call_PushString(mapName);
@@ -286,7 +286,7 @@ public int MapVetoMenuHandler(Menu menu, MenuAction action, int param1, int para
     g_LastVetoTeam = team;
 
   } else if (action == MenuAction_Cancel) {
-    if(g_GameState == Get5State_Veto) {
+    if(g_GameState == OpenPugState_Veto) {
       AbortVeto();
     }
 
@@ -338,13 +338,13 @@ public int MapPickMenuHandler(Menu menu, MenuAction action, int param1, int para
     g_MapsToPlay.PushString(mapName);
     RemoveStringFromArray(g_MapsLeftInVetoPool, mapName);
 
-    Get5_MessageToAll("%t", "TeamPickedMapInfoMessage", g_FormattedTeamNames[team], mapName,
+    OpenPug_MessageToAll("%t", "TeamPickedMapInfoMessage", g_FormattedTeamNames[team], mapName,
                       g_MapsToPlay.Length);
     g_LastVetoTeam = team;
 
     EventLogger_MapPicked(team, mapName, g_MapsToPlay.Length - 1);
 
-    LogDebug("Calling Get5_OnMapPicked(team=%d, map=%s)", team, mapName);
+    LogDebug("Calling OpenPug_OnMapPicked(team=%d, map=%s)", team, mapName);
     Call_StartForward(g_OnMapPicked);
     Call_PushCell(team);
     Call_PushString(mapName);
@@ -353,7 +353,7 @@ public int MapPickMenuHandler(Menu menu, MenuAction action, int param1, int para
     VetoController(GetNextTeamCaptain(client));
 
   } else if (action == MenuAction_Cancel) {
-    if(g_GameState == Get5State_Veto) {
+    if(g_GameState == OpenPugState_Veto) {
       AbortVeto();
     }
 
@@ -413,12 +413,12 @@ public int SidePickMenuHandler(Menu menu, MenuAction action, int param1, int par
     char mapName[PLATFORM_MAX_PATH];
     g_MapsToPlay.GetString(g_MapsToPlay.Length - 1, mapName, sizeof(mapName));
 
-    Get5_MessageToAll("%t", "TeamSelectSideInfoMessage", g_FormattedTeamNames[team], choice,
+    OpenPug_MessageToAll("%t", "TeamSelectSideInfoMessage", g_FormattedTeamNames[team], choice,
                       mapName);
 
     EventLogger_SidePicked(team, mapName, g_MapsToPlay.Length - 1, selectedSide);
 
-    LogDebug("Calling Get5_OnSidePicked(team=%d, map=%s, side=%d)", team, mapName, selectedSide);
+    LogDebug("Calling OpenPug_OnSidePicked(team=%d, map=%s, side=%d)", team, mapName, selectedSide);
     Call_StartForward(g_OnSidePicked);
     Call_PushCell(team);
     Call_PushString(mapName);
@@ -428,7 +428,7 @@ public int SidePickMenuHandler(Menu menu, MenuAction action, int param1, int par
     VetoController(client);
 
   } else if (action == MenuAction_Cancel) {
-    if(g_GameState == Get5State_Veto) {
+    if(g_GameState == OpenPugState_Veto) {
       AbortVeto();
     }
 

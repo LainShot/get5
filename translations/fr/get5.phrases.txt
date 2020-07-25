@@ -290,7 +290,7 @@
     }
     "MatchPoweredBy"
     {
-        "fr"        "Powered by {YELLOW}Get5"
+        "fr"        "Powered by {YELLOW}OpenPug"
     }
     "MapVetoPickMenuText"
     {

@@ -6,7 +6,7 @@ public Action StartGoingLive(Handle timer) {
   ExecuteMatchConfigCvars();
 
   // Force kill the warmup if we (still) need to.
-  Get5_MessageToAll("%t", "MatchBeginInSecondsInfoMessage", g_LiveCountdownTimeCvar.IntValue);
+  OpenPug_MessageToAll("%t", "MatchBeginInSecondsInfoMessage", g_LiveCountdownTimeCvar.IntValue);
   if (InWarmup()) {
     EndWarmup(g_LiveCountdownTimeCvar.IntValue);
   } else {
@@ -23,7 +23,7 @@ public Action StartGoingLive(Handle timer) {
 
   EventLogger_GoingLive();
 
-  LogDebug("Calling Get5_OnGoingLive(mapnum=%d)", GetMapNumber());
+  LogDebug("Calling OpenPug_OnGoingLive(mapnum=%d)", GetMapNumber());
   Call_StartForward(g_OnGoingLive);
   Call_PushCell(GetMapNumber());
   Call_Finish();
@@ -32,7 +32,7 @@ public Action StartGoingLive(Handle timer) {
 }
 
 public Action MatchLive(Handle timer) {
-  if (g_GameState == Get5State_None) {
+  if (g_GameState == OpenPugState_None) {
     return Plugin_Handled;
   }
 
@@ -50,13 +50,13 @@ public Action MatchLive(Handle timer) {
   SetConVarInt(mp_match_restart_delay, GetTvDelay() + MATCH_END_DELAY_AFTER_TV + 5);
 
   for (int i = 0; i < 5; i++) {
-    Get5_MessageToAll("%t", "MatchIsLiveInfoMessage");
+    OpenPug_MessageToAll("%t", "MatchIsLiveInfoMessage");
   }
 
   char tag[64];
   g_MessagePrefixCvar.GetString(tag, sizeof(tag));
   if (!StrEqual(tag, DEFAULT_TAG)) {
-    Get5_MessageToAll("%t", "MatchPoweredBy");
+    OpenPug_MessageToAll("%t", "MatchPoweredBy");
   }
 
   return Plugin_Handled;

@@ -1,6 +1,6 @@
 /**
  * =============================================================================
- * Get5
+ * OpenPug
  * Copyright (C) 2016. Sean Lewis.  All rights reserved.
  * =============================================================================
  *
@@ -18,7 +18,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "include/get5.inc"
+#include "include/OpenPug.inc"
 #include "include/logdebug.inc"
 #include "include/restorecvars.inc"
 #include <cstrike>
@@ -33,7 +33,7 @@
 #define CHECK_READY_TIMER_INTERVAL 1.0
 #define INFO_MESSAGE_TIMER_INTERVAL 29.0
 
-#define DEBUG_CVAR "get5_debug"
+#define DEBUG_CVAR "OpenPug_debug"
 #define MATCH_ID_LENGTH 64
 #define MAX_CVAR_LENGTH 128
 #define MATCH_END_DELAY_AFTER_TV 10
@@ -42,8 +42,8 @@
 #define TEAM2_COLOR "{PINK}"
 #define TEAM1_STARTING_SIDE CS_TEAM_CT
 #define TEAM2_STARTING_SIDE CS_TEAM_T
-#define KNIFE_CONFIG "get5/knife.cfg"
-#define DEFAULT_TAG "[{YELLOW}Get5{NORMAL}]"
+#define KNIFE_CONFIG "OpenPug/knife.cfg"
+#define DEFAULT_TAG "[{YELLOW}OpenPug{NORMAL}]"
 
 #pragma semicolon 1
 #pragma newdecls required
@@ -85,7 +85,7 @@ ConVar g_WarmupCfgCvar;
 
 // Autoset convars (not meant for users to set)
 ConVar g_GameStateCvar;
-ConVar g_LastGet5BackupCvar;
+ConVar g_LastOpenPugBackupCvar;
 ConVar g_VersionCvar;
 
 // Hooked cvars built into csgo
@@ -119,7 +119,7 @@ bool g_InScrimMode = false;
 bool g_HasKnifeRoundStarted = false;
 
 /** Other state **/
-Get5State g_GameState = Get5State_None;
+OpenPugState g_GameState = OpenPugState_None;
 ArrayList g_MapsToPlay = null;
 ArrayList g_MapSides = null;
 ArrayList g_MapsLeftInVetoPool = null;
@@ -201,34 +201,34 @@ Handle g_OnRoundStatsUpdated = INVALID_HANDLE;
 Handle g_OnSeriesInit = INVALID_HANDLE;
 Handle g_OnSeriesResult = INVALID_HANDLE;
 
-#include "get5/util.sp"
-#include "get5/version.sp"
+#include "OpenPug/util.sp"
+#include "OpenPug/version.sp"
 
-#include "get5/backups.sp"
-#include "get5/chatcommands.sp"
-#include "get5/debug.sp"
-#include "get5/eventlogger.sp"
-#include "get5/get5menu.sp"
-#include "get5/goinglive.sp"
-#include "get5/jsonhelpers.sp"
-#include "get5/kniferounds.sp"
-#include "get5/maps.sp"
-#include "get5/mapveto.sp"
-#include "get5/matchconfig.sp"
-#include "get5/natives.sp"
-#include "get5/pausing.sp"
-#include "get5/readysystem.sp"
-#include "get5/stats.sp"
-#include "get5/teamlogic.sp"
-#include "get5/tests.sp"
+#include "OpenPug/backups.sp"
+#include "OpenPug/chatcommands.sp"
+#include "OpenPug/debug.sp"
+#include "OpenPug/eventlogger.sp"
+#include "OpenPug/OpenPugmenu.sp"
+#include "OpenPug/goinglive.sp"
+#include "OpenPug/jsonhelpers.sp"
+#include "OpenPug/kniferounds.sp"
+#include "OpenPug/maps.sp"
+#include "OpenPug/mapveto.sp"
+#include "OpenPug/matchconfig.sp"
+#include "OpenPug/natives.sp"
+#include "OpenPug/pausing.sp"
+#include "OpenPug/readysystem.sp"
+#include "OpenPug/stats.sp"
+#include "OpenPug/teamlogic.sp"
+#include "OpenPug/tests.sp"
 
 // clang-format off
 public Plugin myinfo = {
-  name = "Get5",
+  name = "OpenPug",
   author = "splewis",
   description = "",
   version = PLUGIN_VERSION,
-  url = "https://github.com/splewis/get5"
+  url = "https://github.com/splewis/OpenPug"
 };
 // clang-format on
 
@@ -237,111 +237,111 @@ public Plugin myinfo = {
  */
 
 public void OnPluginStart() {
-  InitDebugLog(DEBUG_CVAR, "get5");
+  InitDebugLog(DEBUG_CVAR, "OpenPug");
   LogDebug("OnPluginStart version=%s", PLUGIN_VERSION);
 
   /** Translations **/
-  LoadTranslations("get5.phrases");
+  LoadTranslations("OpenPug.phrases");
   LoadTranslations("common.phrases");
 
   /** ConVars **/
-  g_AllowTechPauseCvar = CreateConVar("get5_allow_technical_pause", "1",
+  g_AllowTechPauseCvar = CreateConVar("OpenPug_allow_technical_pause", "1",
                                       "Whether or not technical pauses are allowed");
   g_AutoLoadConfigCvar =
-      CreateConVar("get5_autoload_config", "",
+      CreateConVar("OpenPug_autoload_config", "",
                    "Name of a match config file to automatically load when the server loads");
   g_BackupSystemEnabledCvar =
-      CreateConVar("get5_backup_system_enabled", "1", "Whether the get5 backup system is enabled");
+      CreateConVar("OpenPug_backup_system_enabled", "1", "Whether the OpenPug backup system is enabled");
   g_DamagePrintCvar =
-      CreateConVar("get5_print_damage", "0", "Whether damage reports are printed on round end.");
+      CreateConVar("OpenPug_print_damage", "0", "Whether damage reports are printed on round end.");
   g_DamagePrintFormat = CreateConVar(
-      "get5_damageprint_format",
+      "OpenPug_damageprint_format",
       "--> ({DMG_TO} dmg / {HITS_TO} hits) to ({DMG_FROM} dmg / {HITS_FROM} hits) from {NAME} ({HEALTH} HP)",
       "Format of the damage output string. Avaliable tags are in the default, color tags such as {LIGHT_RED} and {GREEN} also work.");
   g_CheckAuthsCvar =
-      CreateConVar("get5_check_auths", "1",
-                   "If set to 0, get5 will not force players to the correct team based on steamid");
-  g_DemoNameFormatCvar = CreateConVar("get5_demo_name_format", "{MATCHID}_map{MAPNUMBER}_{MAPNAME}",
+      CreateConVar("OpenPug_check_auths", "1",
+                   "If set to 0, OpenPug will not force players to the correct team based on steamid");
+  g_DemoNameFormatCvar = CreateConVar("OpenPug_demo_name_format", "{MATCHID}_map{MAPNUMBER}_{MAPNAME}",
                                       "Format for demo file names, use \"\" to disable");
   g_DisplayGotvVeto =
-      CreateConVar("get5_display_gotv_veto", "0",
+      CreateConVar("OpenPug_display_gotv_veto", "0",
                    "Whether to wait for map vetos to be printed to GOTV before changing map");
   g_EndMatchOnEmptyServerCvar = CreateConVar(
-      "get5_end_match_on_empty_server", "0",
+      "OpenPug_end_match_on_empty_server", "0",
       "Whether to end the match if all players disconnect before ending. No winner is set if this happens.");
   g_EventLogFormatCvar =
-      CreateConVar("get5_event_log_format", "",
+      CreateConVar("OpenPug_event_log_format", "",
                    "Path to use when writing match event logs, use \"\" to disable");
   g_FixedPauseTimeCvar =
-      CreateConVar("get5_fixed_pause_time", "0",
+      CreateConVar("OpenPug_fixed_pause_time", "0",
                    "If set to non-zero, this will be the fixed length of any pause");
   g_KickClientImmunity = CreateConVar(
-      "get5_kick_immunity", "1",
-      "Whether or not admins with the changemap flag will be immune to kicks from \"get5_kick_when_no_match_loaded\". Set to \"0\" to disable");
+      "OpenPug_kick_immunity", "1",
+      "Whether or not admins with the changemap flag will be immune to kicks from \"OpenPug_kick_when_no_match_loaded\". Set to \"0\" to disable");
   g_KickClientsWithNoMatchCvar =
-      CreateConVar("get5_kick_when_no_match_loaded", "1",
+      CreateConVar("OpenPug_kick_when_no_match_loaded", "1",
                    "Whether the plugin kicks new clients when no match is loaded");
   g_LiveCfgCvar =
-      CreateConVar("get5_live_cfg", "get5/live.cfg", "Config file to exec when the game goes live");
+      CreateConVar("OpenPug_live_cfg", "OpenPug/live.cfg", "Config file to exec when the game goes live");
   g_LiveCountdownTimeCvar = CreateConVar(
-      "get5_live_countdown_time", "10",
+      "OpenPug_live_countdown_time", "10",
       "Number of seconds used to count down when a match is going live", 0, true, 5.0, true, 60.0);
   g_MaxBackupAgeCvar =
-      CreateConVar("get5_max_backup_age", "160000",
+      CreateConVar("OpenPug_max_backup_age", "160000",
                    "Number of seconds before a backup file is automatically deleted, 0 to disable");
   g_MaxPausesCvar =
-      CreateConVar("get5_max_pauses", "0", "Maximum number of pauses a team can use, 0=unlimited");
+      CreateConVar("OpenPug_max_pauses", "0", "Maximum number of pauses a team can use, 0=unlimited");
   g_MaxPauseTimeCvar =
-      CreateConVar("get5_max_pause_time", "300",
+      CreateConVar("OpenPug_max_pause_time", "300",
                    "Maximum number of time the game can spend paused by a team, 0=unlimited");
   g_MessagePrefixCvar =
-      CreateConVar("get5_message_prefix", DEFAULT_TAG, "The tag applied before plugin messages.");
+      CreateConVar("OpenPug_message_prefix", DEFAULT_TAG, "The tag applied before plugin messages.");
   g_ResetPausesEachHalfCvar =
-      CreateConVar("get5_reset_pauses_each_half", "1",
+      CreateConVar("OpenPug_reset_pauses_each_half", "1",
                    "Whether pause limits will be reset each halftime period");
-  g_PausingEnabledCvar = CreateConVar("get5_pausing_enabled", "1", "Whether pausing is allowed.");
-  g_PrettyPrintJsonCvar = CreateConVar("get5_pretty_print_json", "1",
+  g_PausingEnabledCvar = CreateConVar("OpenPug_pausing_enabled", "1", "Whether pausing is allowed.");
+  g_PrettyPrintJsonCvar = CreateConVar("OpenPug_pretty_print_json", "1",
                                        "Whether all JSON output is in pretty-print format.");
   g_ServerIdCvar = CreateConVar(
-      "get5_server_id", "0",
+      "OpenPug_server_id", "0",
       "Integer that identifies your server. This is used in temp files to prevent collisions.");
-  g_SetClientClanTagCvar = CreateConVar("get5_set_client_clan_tags", "1",
+  g_SetClientClanTagCvar = CreateConVar("OpenPug_set_client_clan_tags", "1",
                                         "Whether to set client clan tags to player ready status.");
   g_SetHostnameCvar = CreateConVar(
-      "get5_hostname_format", "Get5: {TEAM1} vs {TEAM2}",
+      "OpenPug_hostname_format", "OpenPug: {TEAM1} vs {TEAM2}",
       "Template that the server hostname will follow when a match is live. Leave field blank to disable. Valid parameters are: {MAPNUMBER}, {MATCHID}, {SERVERID}, {MAPNAME}, {TIME}, {TEAM1}, {TEAM2}");
   g_StatsPathFormatCvar =
-      CreateConVar("get5_stats_path_format", "get5_matchstats_{MATCHID}.cfg",
+      CreateConVar("OpenPug_stats_path_format", "OpenPug_matchstats_{MATCHID}.cfg",
                    "Where match stats are saved (updated each map end), set to \"\" to disable");
   g_StopCommandEnabledCvar =
-      CreateConVar("get5_stop_command_enabled", "1",
+      CreateConVar("OpenPug_stop_command_enabled", "1",
                    "Whether clients can use the !stop command to restore to the last round");
   g_TeamTimeToStartCvar = CreateConVar(
-      "get5_time_to_start", "0",
+      "OpenPug_time_to_start", "0",
       "Time (in seconds) teams have to ready up before forfeiting the match, 0=unlimited");
   g_TeamTimeToKnifeDecisionCvar = CreateConVar(
-      "get5_time_to_make_knife_decision", "60",
+      "OpenPug_time_to_make_knife_decision", "60",
       "Time (in seconds) a team has to make a !stay/!swap decision after winning knife round, 0=unlimited");
   g_TimeFormatCvar = CreateConVar(
-      "get5_time_format", "%Y-%m-%d_%H",
+      "OpenPug_time_format", "%Y-%m-%d_%H",
       "Time format to use when creating file names. Don't tweak this unless you know what you're doing! Avoid using spaces or colons.");
   g_VetoConfirmationTimeCvar = CreateConVar(
-      "get5_veto_confirmation_time", "2.0",
+      "OpenPug_veto_confirmation_time", "2.0",
       "Time (in seconds) from presenting a veto menu to a selection being made, during which a confirmation will be required, 0 to disable");
   g_VetoCountdownCvar =
-      CreateConVar("get5_veto_countdown", "5",
+      CreateConVar("OpenPug_veto_countdown", "5",
                    "Seconds to countdown before veto process commences. Set to \"0\" to disable.");
   g_WarmupCfgCvar =
-      CreateConVar("get5_warmup_cfg", "get5/warmup.cfg", "Config file to exec in warmup periods");
+      CreateConVar("OpenPug_warmup_cfg", "OpenPug/warmup.cfg", "Config file to exec in warmup periods");
 
   /** Create and exec plugin's configuration file **/
-  AutoExecConfig(true, "get5");
+  AutoExecConfig(true, "OpenPug");
 
   g_GameStateCvar =
-      CreateConVar("get5_game_state", "0", "Current game state (see get5.inc)", FCVAR_DONTRECORD);
-  g_LastGet5BackupCvar =
-      CreateConVar("get5_last_backup_file", "", "Last get5 backup file written", FCVAR_DONTRECORD);
-  g_VersionCvar = CreateConVar("get5_version", PLUGIN_VERSION, "Current get5 version",
+      CreateConVar("OpenPug_game_state", "0", "Current game state (see OpenPug.inc)", FCVAR_DONTRECORD);
+  g_LastOpenPugBackupCvar =
+      CreateConVar("OpenPug_last_backup_file", "", "Last OpenPug backup file written", FCVAR_DONTRECORD);
+  g_VersionCvar = CreateConVar("OpenPug_version", PLUGIN_VERSION, "Current OpenPug version",
                                FCVAR_SPONLY | FCVAR_REPLICATED | FCVAR_NOTIFY | FCVAR_DONTRECORD);
   g_VersionCvar.SetString(PLUGIN_VERSION);
 
@@ -368,52 +368,52 @@ public void OnPluginStart() {
 
   /** Admin/server commands **/
   RegAdminCmd(
-      "get5_loadmatch", Command_LoadMatch, ADMFLAG_CHANGEMAP,
+      "OpenPug_loadmatch", Command_LoadMatch, ADMFLAG_CHANGEMAP,
       "Loads a match config file (json or keyvalues) from a file relative to the csgo/ directory");
   RegAdminCmd(
-      "get5_loadmatch_url", Command_LoadMatchUrl, ADMFLAG_CHANGEMAP,
+      "OpenPug_loadmatch_url", Command_LoadMatchUrl, ADMFLAG_CHANGEMAP,
       "Loads a JSON config file by sending a GET request to download it. Requires either the SteamWorks extension.");
-  RegAdminCmd("get5_loadteam", Command_LoadTeam, ADMFLAG_CHANGEMAP,
+  RegAdminCmd("OpenPug_loadteam", Command_LoadTeam, ADMFLAG_CHANGEMAP,
               "Loads a team data from a file into a team");
-  RegAdminCmd("get5_endmatch", Command_EndMatch, ADMFLAG_CHANGEMAP, "Force ends the current match");
-  RegAdminCmd("get5_addplayer", Command_AddPlayer, ADMFLAG_CHANGEMAP,
+  RegAdminCmd("OpenPug_endmatch", Command_EndMatch, ADMFLAG_CHANGEMAP, "Force ends the current match");
+  RegAdminCmd("OpenPug_addplayer", Command_AddPlayer, ADMFLAG_CHANGEMAP,
               "Adds a steamid to a match team");
-  RegAdminCmd("get5_removeplayer", Command_RemovePlayer, ADMFLAG_CHANGEMAP,
+  RegAdminCmd("OpenPug_removeplayer", Command_RemovePlayer, ADMFLAG_CHANGEMAP,
               "Removes a steamid from a match team");
-  RegAdminCmd("get5_creatematch", Command_CreateMatch, ADMFLAG_CHANGEMAP,
+  RegAdminCmd("OpenPug_creatematch", Command_CreateMatch, ADMFLAG_CHANGEMAP,
               "Creates and loads a match using the players currently on the server as a Bo1");
 
-  RegAdminCmd("get5_scrim", Command_CreateScrim, ADMFLAG_CHANGEMAP,
+  RegAdminCmd("OpenPug_scrim", Command_CreateScrim, ADMFLAG_CHANGEMAP,
               "Creates and loads a match using the scrim template");
   RegAdminCmd("sm_scrim", Command_CreateScrim, ADMFLAG_CHANGEMAP,
               "Creates and loads a match using the scrim template");
 
-  RegAdminCmd("get5_ringer", Command_Ringer, ADMFLAG_CHANGEMAP,
+  RegAdminCmd("OpenPug_ringer", Command_Ringer, ADMFLAG_CHANGEMAP,
               "Adds/removes a ringer to/from the home scrim team");
   RegAdminCmd("sm_ringer", Command_Ringer, ADMFLAG_CHANGEMAP,
               "Adds/removes a ringer to/from the home scrim team");
 
-  RegAdminCmd("sm_get5", Command_Get5AdminMenu, ADMFLAG_CHANGEMAP, "Displays a helper menu");
+  RegAdminCmd("sm_OpenPug", Command_OpenPugAdminMenu, ADMFLAG_CHANGEMAP, "Displays a helper menu");
 
-  RegAdminCmd("get5_forceready", Command_AdminForceReady, ADMFLAG_CHANGEMAP,
+  RegAdminCmd("OpenPug_forceready", Command_AdminForceReady, ADMFLAG_CHANGEMAP,
               "Force readies all current teams");
-  RegAdminCmd("get5_forcestart", Command_AdminForceReady, ADMFLAG_CHANGEMAP,
+  RegAdminCmd("OpenPug_forcestart", Command_AdminForceReady, ADMFLAG_CHANGEMAP,
               "Force readies all current teams");
 
-  RegAdminCmd("get5_dumpstats", Command_DumpStats, ADMFLAG_CHANGEMAP,
+  RegAdminCmd("OpenPug_dumpstats", Command_DumpStats, ADMFLAG_CHANGEMAP,
               "Dumps match stats to a file");
-  RegAdminCmd("get5_listbackups", Command_ListBackups, ADMFLAG_CHANGEMAP,
-              "Lists get5 match backups for the current matchid or a given one");
-  RegAdminCmd("get5_loadbackup", Command_LoadBackup, ADMFLAG_CHANGEMAP,
-              "Loads a get5 match backup");
-  RegAdminCmd("get5_debuginfo", Command_DebugInfo, ADMFLAG_CHANGEMAP,
-              "Dumps debug info to a file (addons/sourcemod/logs/get5_debuginfo.txt by default)");
+  RegAdminCmd("OpenPug_listbackups", Command_ListBackups, ADMFLAG_CHANGEMAP,
+              "Lists OpenPug match backups for the current matchid or a given one");
+  RegAdminCmd("OpenPug_loadbackup", Command_LoadBackup, ADMFLAG_CHANGEMAP,
+              "Loads a OpenPug match backup");
+  RegAdminCmd("OpenPug_debuginfo", Command_DebugInfo, ADMFLAG_CHANGEMAP,
+              "Dumps debug info to a file (addons/sourcemod/logs/OpenPug_debuginfo.txt by default)");
 
   /** Other commands **/
-  RegConsoleCmd("get5_status", Command_Status, "Prints JSON formatted match state info");
+  RegConsoleCmd("OpenPug_status", Command_Status, "Prints JSON formatted match state info");
   RegServerCmd(
-      "get5_test", Command_Test,
-      "Runs get5 tests - should not be used on a live match server since it will reload a match config to test");
+      "OpenPug_test", Command_Test,
+      "Runs OpenPug tests - should not be used on a live match server since it will reload a match config to test");
 
   /** Hooks **/
   HookEvent("player_spawn", Event_PlayerSpawn);
@@ -447,26 +447,26 @@ public void OnPluginStart() {
   g_PlayerNames = new StringMap();
 
   /** Create forwards **/
-  g_OnBackupRestore = CreateGlobalForward("Get5_OnBackupRestore", ET_Ignore);
-  g_OnDemoFinished = CreateGlobalForward("Get5_OnDemoFinished", ET_Ignore, Param_String);
-  g_OnEvent = CreateGlobalForward("Get5_OnEvent", ET_Ignore, Param_String);
+  g_OnBackupRestore = CreateGlobalForward("OpenPug_OnBackupRestore", ET_Ignore);
+  g_OnDemoFinished = CreateGlobalForward("OpenPug_OnDemoFinished", ET_Ignore, Param_String);
+  g_OnEvent = CreateGlobalForward("OpenPug_OnEvent", ET_Ignore, Param_String);
   g_OnGameStateChanged =
-      CreateGlobalForward("Get5_OnGameStateChanged", ET_Ignore, Param_Cell, Param_Cell);
-  g_OnGoingLive = CreateGlobalForward("Get5_OnGoingLive", ET_Ignore, Param_Cell);
-  g_OnMapResult = CreateGlobalForward("Get5_OnMapResult", ET_Ignore, Param_String, Param_Cell,
+      CreateGlobalForward("OpenPug_OnGameStateChanged", ET_Ignore, Param_Cell, Param_Cell);
+  g_OnGoingLive = CreateGlobalForward("OpenPug_OnGoingLive", ET_Ignore, Param_Cell);
+  g_OnMapResult = CreateGlobalForward("OpenPug_OnMapResult", ET_Ignore, Param_String, Param_Cell,
                                       Param_Cell, Param_Cell, Param_Cell);
   g_OnLoadMatchConfigFailed =
-      CreateGlobalForward("Get5_OnLoadMatchConfigFailed", ET_Ignore, Param_String);
-  g_OnMapPicked = CreateGlobalForward("Get5_OnMapPicked", ET_Ignore, Param_Cell, Param_String);
-  g_OnMapVetoed = CreateGlobalForward("Get5_OnMapVetoed", ET_Ignore, Param_Cell, Param_String);
+      CreateGlobalForward("OpenPug_OnLoadMatchConfigFailed", ET_Ignore, Param_String);
+  g_OnMapPicked = CreateGlobalForward("OpenPug_OnMapPicked", ET_Ignore, Param_Cell, Param_String);
+  g_OnMapVetoed = CreateGlobalForward("OpenPug_OnMapVetoed", ET_Ignore, Param_Cell, Param_String);
   g_OnSidePicked =
-      CreateGlobalForward("Get5_OnSidePicked", ET_Ignore, Param_Cell, Param_String, Param_Cell);
-  g_OnRoundStatsUpdated = CreateGlobalForward("Get5_OnRoundStatsUpdated", ET_Ignore);
+      CreateGlobalForward("OpenPug_OnSidePicked", ET_Ignore, Param_Cell, Param_String, Param_Cell);
+  g_OnRoundStatsUpdated = CreateGlobalForward("OpenPug_OnRoundStatsUpdated", ET_Ignore);
   g_OnPreLoadMatchConfig =
-      CreateGlobalForward("Get5_OnPreLoadMatchConfig", ET_Ignore, Param_String);
-  g_OnSeriesInit = CreateGlobalForward("Get5_OnSeriesInit", ET_Ignore);
+      CreateGlobalForward("OpenPug_OnPreLoadMatchConfig", ET_Ignore, Param_String);
+  g_OnSeriesInit = CreateGlobalForward("OpenPug_OnSeriesInit", ET_Ignore);
   g_OnSeriesResult =
-      CreateGlobalForward("Get5_OnSeriesResult", ET_Ignore, Param_Cell, Param_Cell, Param_Cell);
+      CreateGlobalForward("OpenPug_OnSeriesResult", ET_Ignore, Param_Cell, Param_Cell, Param_Cell);
 
   /** Start any repeating timers **/
   CreateTimer(CHECK_READY_TIMER_INTERVAL, Timer_CheckReady, _, TIMER_REPEAT);
@@ -475,49 +475,49 @@ public void OnPluginStart() {
 
 public Action Timer_InfoMessages(Handle timer) {
   // Handle pre-veto messages
-  if (g_GameState == Get5State_PreVeto) {
+  if (g_GameState == OpenPugState_PreVeto) {
     if (IsTeamsReady() && !IsSpectatorsReady()) {
-      Get5_MessageToAll("%t", "WaitingForCastersReadyInfoMessage",
+      OpenPug_MessageToAll("%t", "WaitingForCastersReadyInfoMessage",
                         g_FormattedTeamNames[MatchTeam_TeamSpec]);
     } else {
-      Get5_MessageToAll("%t", "ReadyToVetoInfoMessage");
+      OpenPug_MessageToAll("%t", "ReadyToVetoInfoMessage");
     }
     MissingPlayerInfoMessage();
   }
 
   // Handle warmup state, provided we're not waiting for a map change
-  if (g_GameState == Get5State_Warmup && !g_MapChangePending) {
+  if (g_GameState == OpenPugState_Warmup && !g_MapChangePending) {
     // Backups take priority
     if (!IsTeamsReady() && g_WaitingForRoundBackup) {
-      Get5_MessageToAll("%t", "ReadyToRestoreBackupInfoMessage");
+      OpenPug_MessageToAll("%t", "ReadyToRestoreBackupInfoMessage");
       return Plugin_Continue;
     }
 
     // Find out what we're waiting for
     if (IsTeamsReady() && !IsSpectatorsReady()) {
-      Get5_MessageToAll("%t", "WaitingForCastersReadyInfoMessage",
+      OpenPug_MessageToAll("%t", "WaitingForCastersReadyInfoMessage",
                         g_FormattedTeamNames[MatchTeam_TeamSpec]);
     } else {
       if (g_MapSides.Get(GetMapNumber()) == SideChoice_KnifeRound) {
-        Get5_MessageToAll("%t", "ReadyToKnifeInfoMessage");
+        OpenPug_MessageToAll("%t", "ReadyToKnifeInfoMessage");
       } else {
-        Get5_MessageToAll("%t", "ReadyToStartInfoMessage");
+        OpenPug_MessageToAll("%t", "ReadyToStartInfoMessage");
       }
     }
     MissingPlayerInfoMessage();
-  } else if (g_DisplayGotvVeto.BoolValue && g_GameState == Get5State_Warmup && g_MapChangePending) {
-    Get5_MessageToAll("%t", "WaitingForGOTVVetoInfoMessage");
+  } else if (g_DisplayGotvVeto.BoolValue && g_GameState == OpenPugState_Warmup && g_MapChangePending) {
+    OpenPug_MessageToAll("%t", "WaitingForGOTVVetoInfoMessage");
   }
 
   // Handle waiting for knife decision
-  if (g_GameState == Get5State_WaitingForKnifeRoundDecision) {
-    Get5_MessageToAll("%t", "WaitingForEnemySwapInfoMessage",
+  if (g_GameState == OpenPugState_WaitingForKnifeRoundDecision) {
+    OpenPug_MessageToAll("%t", "WaitingForEnemySwapInfoMessage",
                       g_FormattedTeamNames[g_KnifeWinnerTeam]);
   }
 
   // Handle postgame
-  if (g_GameState == Get5State_PostGame) {
-    Get5_MessageToAll("%t", "WaitingForGOTVBrodcastEndingInfoMessage");
+  if (g_GameState == OpenPugState_PostGame) {
+    OpenPug_MessageToAll("%t", "WaitingForGOTVBrodcastEndingInfoMessage");
   }
 
   return Plugin_Continue;
@@ -530,7 +530,7 @@ public void OnClientAuthorized(int client, const char[] auth) {
     return;
   }
 
-  if (g_GameState != Get5State_None && g_CheckAuthsCvar.BoolValue) {
+  if (g_GameState != OpenPugState_None && g_CheckAuthsCvar.BoolValue) {
     MatchTeam team = GetClientMatchTeam(client);
     if (team == MatchTeam_TeamNone) {
       KickClient(client, "%t", "YourAreNotAPlayerInfoMessage");
@@ -549,7 +549,7 @@ public void OnClientPutInServer(int client) {
   }
 
   CheckAutoLoadConfig();
-  if (g_GameState <= Get5State_Warmup && g_GameState != Get5State_None) {
+  if (g_GameState <= OpenPugState_Warmup && g_GameState != OpenPugState_None) {
     if (GetRealClientCount() <= 1) {
       ExecCfg(g_WarmupCfgCvar);
       EnsurePausedWarmup();
@@ -561,9 +561,9 @@ public void OnClientPutInServer(int client) {
 
 public void OnClientPostAdminCheck(int client) {
   if (IsPlayer(client)) {
-    if (g_GameState == Get5State_None && g_KickClientsWithNoMatchCvar.BoolValue) {
+    if (g_GameState == OpenPugState_None && g_KickClientsWithNoMatchCvar.BoolValue) {
       if (!g_KickClientImmunity.BoolValue ||
-          !CheckCommandAccess(client, "get5_kickcheck", ADMFLAG_CHANGEMAP)) {
+          !CheckCommandAccess(client, "OpenPug_kickcheck", ADMFLAG_CHANGEMAP)) {
         KickClient(client, "%t", "NoMatchSetupInfoMessage");
       }
     }
@@ -571,7 +571,7 @@ public void OnClientPostAdminCheck(int client) {
 }
 
 public void OnClientSayCommand_Post(int client, const char[] command, const char[] sArgs) {
-  if (StrEqual(command, "say") && g_GameState != Get5State_None) {
+  if (StrEqual(command, "say") && g_GameState != OpenPugState_None) {
     EventLogger_ClientSay(client, sArgs);
   }
   CheckForChatAlias(client, command, sArgs);
@@ -596,8 +596,8 @@ public Action Event_PlayerDisconnect(Event event, const char[] name, bool dontBr
   EventLogger_PlayerDisconnect(client);
 
   // TODO: consider adding a forfeit if a full team disconnects.
-  if (g_EndMatchOnEmptyServerCvar.BoolValue && g_GameState >= Get5State_Warmup &&
-      g_GameState < Get5State_PostGame && GetRealClientCount() == 0 && !g_MapChangePending) {
+  if (g_EndMatchOnEmptyServerCvar.BoolValue && g_GameState >= OpenPugState_Warmup &&
+      g_GameState < OpenPugState_PostGame && GetRealClientCount() == 0 && !g_MapChangePending) {
     g_TeamSeriesScores[MatchTeam_Team1] = 0;
     g_TeamSeriesScores[MatchTeam_Team2] = 0;
     EndSeries();
@@ -618,7 +618,7 @@ public void OnMapStart() {
   }
 
   if (g_WaitingForRoundBackup) {
-    ChangeState(Get5State_Warmup);
+    ChangeState(OpenPugState_Warmup);
     ExecCfg(g_LiveCfgCvar);
     SetMatchTeamCvars();
     ExecuteMatchConfigCvars();
@@ -630,11 +630,11 @@ public void OnConfigsExecuted() {
   SetStartingTeams();
   CheckAutoLoadConfig();
 
-  if (g_GameState == Get5State_PostGame) {
-    ChangeState(Get5State_Warmup);
+  if (g_GameState == OpenPugState_PostGame) {
+    ChangeState(OpenPugState_Warmup);
   }
 
-  if (g_GameState == Get5State_Warmup || g_GameState == Get5State_Veto) {
+  if (g_GameState == OpenPugState_Warmup || g_GameState == OpenPugState_Veto) {
     ExecCfg(g_WarmupCfgCvar);
     SetMatchTeamCvars();
     ExecuteMatchConfigCvars();
@@ -643,7 +643,7 @@ public void OnConfigsExecuted() {
 }
 
 public Action Timer_CheckReady(Handle timer) {
-  if (g_GameState == Get5State_None) {
+  if (g_GameState == OpenPugState_None) {
     return Plugin_Continue;
   }
 
@@ -652,11 +652,11 @@ public Action Timer_CheckReady(Handle timer) {
   UpdateClanTags();
 
   // Handle ready checks for pre-veto state
-  if (g_GameState == Get5State_PreVeto) {
+  if (g_GameState == OpenPugState_PreVeto) {
     if (IsTeamsReady()) {
       // We don't wait for spectators when initiating veto
       LogDebug("Timer_CheckReady: starting veto");
-      ChangeState(Get5State_Veto);
+      ChangeState(OpenPugState_Veto);
       CreateVeto();
     } else {
       CheckReadyWaitingTimes();
@@ -664,12 +664,12 @@ public Action Timer_CheckReady(Handle timer) {
   }
 
   // Handle ready checks for warmup, provided we are not waiting for a map change
-  if (g_GameState == Get5State_Warmup && !g_MapChangePending) {
+  if (g_GameState == OpenPugState_Warmup && !g_MapChangePending) {
     // We don't wait for spectators when restoring backups
     if (IsTeamsReady() && g_WaitingForRoundBackup) {
       LogDebug("Timer_CheckReady: restoring from backup");
       g_WaitingForRoundBackup = false;
-      RestoreGet5Backup();
+      RestoreOpenPugBackup();
       return Plugin_Continue;
     }
 
@@ -711,27 +711,27 @@ static void CheckReadyWaitingTimes() {
 
     if (team1Forfeited || team2Forfeited) {
       g_ForceWinnerSignal = true;
-      ChangeState(Get5State_None);
+      ChangeState(OpenPugState_None);
       EndSeries();
     }
   }
 }
 
 static bool CheckReadyWaitingTime(MatchTeam team) {
-  if (!IsTeamReady(team) && g_GameState != Get5State_None) {
+  if (!IsTeamReady(team) && g_GameState != OpenPugState_None) {
     int timeLeft = g_TeamTimeToStartCvar.IntValue - g_ReadyTimeWaitingUsed;
 
     if (timeLeft <= 0) {
-      Get5_MessageToAll("%t", "TeamForfeitInfoMessage", g_FormattedTeamNames[team]);
+      OpenPug_MessageToAll("%t", "TeamForfeitInfoMessage", g_FormattedTeamNames[team]);
       return true;
     } else if (timeLeft >= 300 && timeLeft % 60 == 0) {
-      Get5_MessageToAll("%t", "MinutesToForfeitMessage", g_FormattedTeamNames[team], timeLeft / 60);
+      OpenPug_MessageToAll("%t", "MinutesToForfeitMessage", g_FormattedTeamNames[team], timeLeft / 60);
 
     } else if (timeLeft < 300 && timeLeft % 30 == 0) {
-      Get5_MessageToAll("%t", "SecondsToForfeitInfoMessage", g_FormattedTeamNames[team], timeLeft);
+      OpenPug_MessageToAll("%t", "SecondsToForfeitInfoMessage", g_FormattedTeamNames[team], timeLeft);
 
     } else if (timeLeft == 10) {
-      Get5_MessageToAll("%t", "10SecondsToForfeitInfoMessage", g_FormattedTeamNames[team],
+      OpenPug_MessageToAll("%t", "10SecondsToForfeitInfoMessage", g_FormattedTeamNames[team],
                         timeLeft);
     }
   }
@@ -739,7 +739,7 @@ static bool CheckReadyWaitingTime(MatchTeam team) {
 }
 
 static void CheckAutoLoadConfig() {
-  if (g_GameState == Get5State_None) {
+  if (g_GameState == OpenPugState_None) {
     char autoloadConfig[PLATFORM_MAX_PATH];
     g_AutoLoadConfigCvar.GetString(autoloadConfig, sizeof(autoloadConfig));
     if (!StrEqual(autoloadConfig, "")) {
@@ -753,7 +753,7 @@ static void CheckAutoLoadConfig() {
  */
 
 public Action Command_EndMatch(int client, int args) {
-  if (g_GameState == Get5State_None) {
+  if (g_GameState == OpenPugState_None) {
     return Plugin_Handled;
   }
 
@@ -763,7 +763,7 @@ public Action Command_EndMatch(int client, int args) {
   GetCleanMapName(mapName, sizeof(mapName));
   int team1score = CS_GetTeamScore(MatchTeamToCSTeam(MatchTeam_Team1));
   int team2score = CS_GetTeamScore(MatchTeamToCSTeam(MatchTeam_Team2));
-  LogDebug("Calling Get5_OnMapResult(map=%s, winner=%d, team1score=%d, team2score=%d, mapnum=%d)",
+  LogDebug("Calling OpenPug_OnMapResult(map=%s, winner=%d, team1score=%d, team2score=%d, mapnum=%d)",
            mapName, MatchTeam_TeamNone, team1score, team2score, GetMapNumber() - 1);
   Call_StartForward(g_OnMapResult);
   Call_PushString(mapName);
@@ -773,7 +773,7 @@ public Action Command_EndMatch(int client, int args) {
   Call_PushCell(GetMapNumber() - 1);
   Call_Finish();
 
-  LogDebug("Calling Get5_OnSeriesResult(winner=%d, team1_series_score=%d, team2_series_score=%d)",
+  LogDebug("Calling OpenPug_OnSeriesResult(winner=%d, team1_series_score=%d, team2_series_score=%d)",
            MatchTeam_TeamNone, g_TeamSeriesScores[MatchTeam_Team1],
            g_TeamSeriesScores[MatchTeam_Team2]);
   Call_StartForward(g_OnSeriesResult);
@@ -783,9 +783,9 @@ public Action Command_EndMatch(int client, int args) {
   Call_Finish();
 
   UpdateClanTags();
-  ChangeState(Get5State_None);
+  ChangeState(OpenPugState_None);
 
-  Get5_MessageToAll("%t", "AdminForceEndInfoMessage");
+  OpenPug_MessageToAll("%t", "AdminForceEndInfoMessage");
   RestoreCvars(g_MatchConfigChangedCvars);
   StopRecording();
 
@@ -797,7 +797,7 @@ public Action Command_EndMatch(int client, int args) {
 }
 
 public Action Command_LoadMatch(int client, int args) {
-  if (g_GameState != Get5State_None) {
+  if (g_GameState != OpenPugState_None) {
     ReplyToCommand(client, "Cannot load a match when a match is already loaded");
     return Plugin_Handled;
   }
@@ -808,14 +808,14 @@ public Action Command_LoadMatch(int client, int args) {
       ReplyToCommand(client, "Failed to load match config.");
     }
   } else {
-    ReplyToCommand(client, "Usage: get5_loadmatch <filename>");
+    ReplyToCommand(client, "Usage: OpenPug_loadmatch <filename>");
   }
 
   return Plugin_Handled;
 }
 
 public Action Command_LoadMatchUrl(int client, int args) {
-  if (g_GameState != Get5State_None) {
+  if (g_GameState != OpenPugState_None) {
     ReplyToCommand(client, "Cannot load a match config with another match already loaded");
     return Plugin_Handled;
   }
@@ -831,7 +831,7 @@ public Action Command_LoadMatchUrl(int client, int args) {
         ReplyToCommand(client, "Failed to load match config.");
       }
     } else {
-      ReplyToCommand(client, "Usage: get5_loadmatch_url <url>");
+      ReplyToCommand(client, "Usage: OpenPug_loadmatch_url <url>");
     }
   }
 
@@ -839,14 +839,14 @@ public Action Command_LoadMatchUrl(int client, int args) {
 }
 
 public Action Command_DumpStats(int client, int args) {
-  if (g_GameState == Get5State_None) {
+  if (g_GameState == OpenPugState_None) {
     ReplyToCommand(client, "Cannot dump match stats with no match existing");
     return Plugin_Handled;
   }
 
   char arg[PLATFORM_MAX_PATH];
   if (args < 1) {
-    arg = "get5_matchstats.cfg";
+    arg = "OpenPug_matchstats.cfg";
   } else {
     GetCmdArg(1, arg, sizeof(arg));
   }
@@ -866,7 +866,7 @@ public Action Command_Stop(int client, int args) {
     return Plugin_Handled;
   }
 
-  if (g_GameState != Get5State_Live || g_PendingSideSwap == true) {
+  if (g_GameState != OpenPugState_Live || g_PendingSideSwap == true) {
     return Plugin_Handled;
   }
 
@@ -879,10 +879,10 @@ public Action Command_Stop(int client, int args) {
   g_TeamGivenStopCommand[team] = true;
 
   if (g_TeamGivenStopCommand[MatchTeam_Team1] && !g_TeamGivenStopCommand[MatchTeam_Team2]) {
-    Get5_MessageToAll("%t", "TeamWantsToReloadLastRoundInfoMessage",
+    OpenPug_MessageToAll("%t", "TeamWantsToReloadLastRoundInfoMessage",
                       g_FormattedTeamNames[MatchTeam_Team1], g_FormattedTeamNames[MatchTeam_Team2]);
   } else if (!g_TeamGivenStopCommand[MatchTeam_Team1] && g_TeamGivenStopCommand[MatchTeam_Team2]) {
-    Get5_MessageToAll("%t", "TeamWantsToReloadLastRoundInfoMessage",
+    OpenPug_MessageToAll("%t", "TeamWantsToReloadLastRoundInfoMessage",
                       g_FormattedTeamNames[MatchTeam_Team2], g_FormattedTeamNames[MatchTeam_Team1]);
   } else if (g_TeamGivenStopCommand[MatchTeam_Team1] && g_TeamGivenStopCommand[MatchTeam_Team2]) {
     RestoreLastRound();
@@ -897,9 +897,9 @@ public bool RestoreLastRound() {
   }
 
   char lastBackup[PLATFORM_MAX_PATH];
-  g_LastGet5BackupCvar.GetString(lastBackup, sizeof(lastBackup));
+  g_LastOpenPugBackupCvar.GetString(lastBackup, sizeof(lastBackup));
   if (!StrEqual(lastBackup, "")) {
-    ServerCommand("get5_loadbackup \"%s\"", lastBackup);
+    ServerCommand("OpenPug_loadbackup \"%s\"", lastBackup);
     return true;
   }
   return false;
@@ -910,7 +910,7 @@ public bool RestoreLastRound() {
  */
 
 public Action Event_PlayerSpawn(Event event, const char[] name, bool dontBroadcast) {
-  if (g_GameState != Get5State_None && g_GameState < Get5State_KnifeRound) {
+  if (g_GameState != OpenPugState_None && g_GameState < OpenPugState_KnifeRound) {
     int client = GetClientOfUserId(event.GetInt("userid"));
     CreateTimer(0.1, Timer_ReplenishMoney, client, TIMER_FLAG_NO_MAPCHANGE);
   }
@@ -924,7 +924,7 @@ public Action Timer_ReplenishMoney(Handle timer, int client) {
 
 public Action Event_MatchOver(Event event, const char[] name, bool dontBroadcast) {
   LogDebug("Event_MatchOver");
-  if (g_GameState == Get5State_Live) {
+  if (g_GameState == OpenPugState_Live) {
     // Figure out who won
     int t1score = CS_GetTeamScore(MatchTeamToCSTeam(MatchTeam_Team1));
     int t2score = CS_GetTeamScore(MatchTeamToCSTeam(MatchTeam_Team2));
@@ -952,7 +952,7 @@ public Action Event_MatchOver(Event event, const char[] name, bool dontBroadcast
     int team1score = CS_GetTeamScore(MatchTeamToCSTeam(MatchTeam_Team1));
     int team2score = CS_GetTeamScore(MatchTeamToCSTeam(MatchTeam_Team2));
 
-    LogDebug("Calling Get5_OnMapResult(map=%s, winner=%d, team1score=%d, team2score=%d, mapnum=%d)",
+    LogDebug("Calling OpenPug_OnMapResult(map=%s, winner=%d, team1score=%d, team2score=%d, mapnum=%d)",
              mapName, winningTeam, team1score, team2score, GetMapNumber() - 1);
     Call_StartForward(g_OnMapResult);
     Call_PushString(mapName);
@@ -990,15 +990,15 @@ public Action Event_MatchOver(Event event, const char[] name, bool dontBroadcast
 
     } else {
       if (t1maps > t2maps) {
-        Get5_MessageToAll("%t", "TeamWinningSeriesInfoMessage",
+        OpenPug_MessageToAll("%t", "TeamWinningSeriesInfoMessage",
                           g_FormattedTeamNames[MatchTeam_Team1], t1maps, t2maps);
 
       } else if (t2maps > t1maps) {
-        Get5_MessageToAll("%t", "TeamWinningSeriesInfoMessage",
+        OpenPug_MessageToAll("%t", "TeamWinningSeriesInfoMessage",
                           g_FormattedTeamNames[MatchTeam_Team2], t2maps, t1maps);
 
       } else {
-        Get5_MessageToAll("%t", "SeriesTiedInfoMessage", t1maps, t2maps);
+        OpenPug_MessageToAll("%t", "SeriesTiedInfoMessage", t1maps, t2maps);
       }
 
       int index = GetMapNumber();
@@ -1006,8 +1006,8 @@ public Action Event_MatchOver(Event event, const char[] name, bool dontBroadcast
       g_MapsToPlay.GetString(index, nextMap, sizeof(nextMap));
 
       g_MapChangePending = true;
-      Get5_MessageToAll("%t", "NextSeriesMapInfoMessage", nextMap);
-      ChangeState(Get5State_PostGame);
+      OpenPug_MessageToAll("%t", "NextSeriesMapInfoMessage", nextMap);
+      ChangeState(OpenPugState_PostGame);
       CreateTimer(minDelay, Timer_NextMatchMap);
     }
   }
@@ -1018,27 +1018,27 @@ public Action Event_MatchOver(Event event, const char[] name, bool dontBroadcast
 static void SeriesEndMessage(MatchTeam team) {
   if (g_MapsToWin == 1) {
     if (team == MatchTeam_TeamNone) {
-      Get5_MessageToAll("%t", "TeamTiedMatchInfoMessage", g_FormattedTeamNames[MatchTeam_Team1],
+      OpenPug_MessageToAll("%t", "TeamTiedMatchInfoMessage", g_FormattedTeamNames[MatchTeam_Team1],
                         g_FormattedTeamNames[MatchTeam_Team2]);
     } else {
-      Get5_MessageToAll("%t", "TeamWonMatchInfoMessage", g_FormattedTeamNames[team]);
+      OpenPug_MessageToAll("%t", "TeamWonMatchInfoMessage", g_FormattedTeamNames[team]);
     }
   } else {
     if (team == MatchTeam_TeamNone) {
       // BO2 split.
-      Get5_MessageToAll("%t", "TeamsSplitSeriesBO2InfoMessage",
+      OpenPug_MessageToAll("%t", "TeamsSplitSeriesBO2InfoMessage",
                         g_FormattedTeamNames[MatchTeam_Team1],
                         g_FormattedTeamNames[MatchTeam_Team2]);
 
     } else {
-      Get5_MessageToAll("%t", "TeamWonSeriesInfoMessage", g_FormattedTeamNames[team],
+      OpenPug_MessageToAll("%t", "TeamWonSeriesInfoMessage", g_FormattedTeamNames[team],
                         g_TeamSeriesScores[team], g_TeamSeriesScores[OtherMatchTeam(team)]);
     }
   }
 }
 
 public Action Timer_NextMatchMap(Handle timer) {
-  if (g_GameState >= Get5State_Live)
+  if (g_GameState >= OpenPugState_Live)
     StopRecording();
 
   int index = GetMapNumber();
@@ -1058,7 +1058,7 @@ public void KickClientsOnEnd() {
     for (int i = 1; i <= MaxClients; i++) {
       if (IsPlayer(i) &&
           !(g_KickClientImmunity.BoolValue &&
-            CheckCommandAccess(i, "get5_kickcheck", ADMFLAG_CHANGEMAP))) {
+            CheckCommandAccess(i, "OpenPug_kickcheck", ADMFLAG_CHANGEMAP))) {
         KickClient(i, "%t", "MatchFinishedInfoMessage");
       }
     }
@@ -1087,7 +1087,7 @@ public void EndSeries() {
   Stats_SeriesEnd(winningTeam);
   EventLogger_SeriesEnd(winningTeam, t1maps, t2maps);
 
-  LogDebug("Calling Get5_OnSeriesResult(winner=%d, t1maps=%d, t2maps=%d)", winningTeam, t1maps,
+  LogDebug("Calling OpenPug_OnSeriesResult(winner=%d, t1maps=%d, t2maps=%d)", winningTeam, t1maps,
            t2maps);
   Call_StartForward(g_OnSeriesResult);
   Call_PushCell(winningTeam);
@@ -1096,7 +1096,7 @@ public void EndSeries() {
   Call_Finish();
 
   RestoreCvars(g_MatchConfigChangedCvars);
-  ChangeState(Get5State_None);
+  ChangeState(OpenPugState_None);
 }
 
 public Action Event_RoundPreStart(Event event, const char[] name, bool dontBroadcast) {
@@ -1106,19 +1106,19 @@ public Action Event_RoundPreStart(Event event, const char[] name, bool dontBroad
     SwapSides();
   }
 
-  if (g_GameState == Get5State_GoingLive) {
-    ChangeState(Get5State_Live);
+  if (g_GameState == OpenPugState_GoingLive) {
+    ChangeState(OpenPugState_Live);
   }
 
   Stats_ResetRoundValues();
 
-  if (g_GameState >= Get5State_Warmup && !g_DoingBackupRestoreNow) {
+  if (g_GameState >= OpenPugState_Warmup && !g_DoingBackupRestoreNow) {
     WriteBackup();
   }
 }
 
 public Action Event_FreezeEnd(Event event, const char[] name, bool dontBroadcast) {
-  if (g_GameState == Get5State_Live) {
+  if (g_GameState == OpenPugState_Live) {
     Stats_RoundStart();
   }
 }
@@ -1129,11 +1129,11 @@ public void WriteBackup() {
   }
 
   char path[PLATFORM_MAX_PATH];
-  if (g_GameState == Get5State_Live) {
-    Format(path, sizeof(path), "get5_backup_match%s_map%d_round%d.cfg", g_MatchID,
+  if (g_GameState == OpenPugState_Live) {
+    Format(path, sizeof(path), "OpenPug_backup_match%s_map%d_round%d.cfg", g_MatchID,
            GetMapStatsNumber(), GameRules_GetProp("m_totalRoundsPlayed"));
   } else {
-    Format(path, sizeof(path), "get5_backup_match%s_map%d_prelive.cfg", g_MatchID,
+    Format(path, sizeof(path), "OpenPug_backup_match%s_map%d_prelive.cfg", g_MatchID,
            GetMapStatsNumber());
   }
   LogDebug("created path %s", path);
@@ -1141,7 +1141,7 @@ public void WriteBackup() {
   if (!g_DoingBackupRestoreNow) {
     LogDebug("writing to %s", path);
     WriteBackStructure(path);
-    g_LastGet5BackupCvar.SetString(path);
+    g_LastOpenPugBackupCvar.SetString(path);
   }
 }
 
@@ -1151,10 +1151,10 @@ public Action Event_RoundEnd(Event event, const char[] name, bool dontBroadcast)
     return;
   }
 
-  if (g_GameState == Get5State_KnifeRound && g_HasKnifeRoundStarted) {
+  if (g_GameState == OpenPugState_KnifeRound && g_HasKnifeRoundStarted) {
     g_HasKnifeRoundStarted = false;
 
-    ChangeState(Get5State_WaitingForKnifeRoundDecision);
+    ChangeState(OpenPugState_WaitingForKnifeRoundDecision);
     CreateTimer(1.0, Timer_PostKnife);
 
     int ctAlive = CountAlivePlayersOnTeam(CS_TEAM_CT);
@@ -1181,25 +1181,25 @@ public Action Event_RoundEnd(Event event, const char[] name, bool dontBroadcast)
     }
 
     g_KnifeWinnerTeam = CSTeamToMatchTeam(winningCSTeam);
-    Get5_MessageToAll("%t", "WaitingForEnemySwapInfoMessage",
+    OpenPug_MessageToAll("%t", "WaitingForEnemySwapInfoMessage",
                       g_FormattedTeamNames[g_KnifeWinnerTeam]);
 
     if (g_TeamTimeToKnifeDecisionCvar.FloatValue > 0)
       CreateTimer(g_TeamTimeToKnifeDecisionCvar.FloatValue, Timer_ForceKnifeDecision);
   }
 
-  if (g_GameState == Get5State_Live) {
+  if (g_GameState == OpenPugState_Live) {
     int csTeamWinner = event.GetInt("winner");
     int csReason = event.GetInt("reason");
 
-    Get5_MessageToAll("%t", "CurrentScoreInfoMessage", g_TeamNames[MatchTeam_Team1],
+    OpenPug_MessageToAll("%t", "CurrentScoreInfoMessage", g_TeamNames[MatchTeam_Team1],
                       CS_GetTeamScore(MatchTeamToCSTeam(MatchTeam_Team1)),
                       CS_GetTeamScore(MatchTeamToCSTeam(MatchTeam_Team2)),
                       g_TeamNames[MatchTeam_Team2]);
 
     Stats_RoundEnd(csTeamWinner);
 
-    LogDebug("Calling Get5_OnRoundStatsUpdated");
+    LogDebug("Calling OpenPug_OnRoundStatsUpdated");
     Call_StartForward(g_OnRoundStatsUpdated);
     Call_Finish();
 
@@ -1255,7 +1255,7 @@ public void SwapSides() {
  * Silences cvar changes when executing live/knife/warmup configs, *unless* it's sv_cheats.
  */
 public Action Event_CvarChanged(Event event, const char[] name, bool dontBroadcast) {
-  if (g_GameState != Get5State_None) {
+  if (g_GameState != OpenPugState_None) {
     char cvarName[MAX_CVAR_LENGTH];
     event.GetString("cvarname", cvarName, sizeof(cvarName));
     if (!StrEqual(cvarName, "sv_cheats")) {
@@ -1284,7 +1284,7 @@ public void StartGame(bool knifeRound) {
 
   if (knifeRound) {
     LogDebug("StartGame: about to begin knife round");
-    ChangeState(Get5State_KnifeRound);
+    ChangeState(OpenPugState_KnifeRound);
     if (g_KnifeChangedCvars != INVALID_HANDLE) {
       CloseCvarStorage(g_KnifeChangedCvars);
     }
@@ -1292,7 +1292,7 @@ public void StartGame(bool knifeRound) {
     CreateTimer(1.0, StartKnifeRound);
   } else {
     LogDebug("StartGame: about to go live");
-    ChangeState(Get5State_GoingLive);
+    ChangeState(OpenPugState_GoingLive);
     CreateTimer(3.0, StartGoingLive, _, TIMER_FLAG_NO_MAPCHANGE);
   }
 }
@@ -1311,9 +1311,9 @@ public Action StopDemo(Handle timer) {
   return Plugin_Handled;
 }
 
-public void ChangeState(Get5State state) {
+public void ChangeState(OpenPugState state) {
   g_GameStateCvar.IntValue = view_as<int>(state);
-  LogDebug("Get5_OnGameStateChanged(from=%d, to=%d)", g_GameState, state);
+  LogDebug("OpenPug_OnGameStateChanged(from=%d, to=%d)", g_GameState, state);
   Call_StartForward(g_OnGameStateChanged);
   Call_PushCell(g_GameState);
   Call_PushCell(state);
@@ -1337,7 +1337,7 @@ public Action Command_Status(int client, int args) {
   GameStateString(g_GameState, gamestate, sizeof(gamestate));
   json.SetString("gamestate_string", gamestate);
 
-  if (g_GameState != Get5State_None) {
+  if (g_GameState != OpenPugState_None) {
     json.SetString("matchid", g_MatchID);
     json.SetString("loaded_config_file", g_LoadedConfigFile);
     json.SetInt("map_number", GetMapNumber());
@@ -1351,7 +1351,7 @@ public Action Command_Status(int client, int args) {
     json.SetObject("team2", team2);
   }
 
-  if (g_GameState > Get5State_Veto) {
+  if (g_GameState > OpenPugState_Veto) {
     JSON_Object maps = new JSON_Object();
 
     for (int i = 0; i < g_MapsToPlay.Length; i++) {

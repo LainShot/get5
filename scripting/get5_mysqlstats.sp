@@ -1,6 +1,6 @@
 /**
  * =============================================================================
- * Get5 MySQL stats
+ * OpenPug MySQL stats
  * Copyright (C) 2016. Sean Lewis.  All rights reserved.
  * =============================================================================
  *
@@ -21,11 +21,11 @@
 #include <cstrike>
 #include <sourcemod>
 
-#include "get5/version.sp"
-#include "include/get5.inc"
+#include "OpenPug/version.sp"
+#include "include/OpenPug.inc"
 #include "include/logdebug.inc"
 
-#include "get5/util.sp"
+#include "OpenPug/util.sp"
 
 #pragma semicolon 1
 #pragma newdecls required
@@ -40,38 +40,38 @@ bool g_DisableStats = false;
 
 // clang-format off
 public Plugin myinfo = {
-  name = "Get5 MySQL stats",
+  name = "OpenPug MySQL stats",
   author = "splewis",
-  description = "Records match stats collected by get5 to MySQL",
+  description = "Records match stats collected by OpenPug to MySQL",
   version = PLUGIN_VERSION,
-  url = "https://github.com/splewis/get5"
+  url = "https://github.com/splewis/OpenPug"
 };
 // clang-format on
 
 public void OnPluginStart() {
-  InitDebugLog("get5_debug", "get5_mysql");
+  InitDebugLog("OpenPug_debug", "OpenPug_mysql");
 
   g_ForceMatchIDCvar = CreateConVar(
-      "get5_mysql_force_matchid", "0",
-      "If set to a positive integer, this will force get5 to use the matchid in this convar");
+      "OpenPug_mysql_force_matchid", "0",
+      "If set to a positive integer, this will force OpenPug to use the matchid in this convar");
 
   char error[255];
-  db = SQL_Connect("get5", true, error, sizeof(error));
+  db = SQL_Connect("OpenPug", true, error, sizeof(error));
   if (db == null) {
-    SetFailState("Could not connect to get5 database: %s", error);
+    SetFailState("Could not connect to OpenPug database: %s", error);
   } else {
     g_DisableStats = false;
     db.SetCharset("utf8");
   }
 }
 
-public void Get5_OnBackupRestore() {
+public void OpenPug_OnBackupRestore() {
   char matchid[64];
-  Get5_GetMatchID(matchid, sizeof(matchid));
+  OpenPug_GetMatchID(matchid, sizeof(matchid));
   g_MatchID = StringToInt(matchid);
 }
 
-public void Get5_OnSeriesInit() {
+public void OpenPug_OnSeriesInit() {
   g_MatchID = -1;
 
   char seriesType[64];
@@ -84,7 +84,7 @@ public void Get5_OnSeriesInit() {
 
   KeyValues tmpStats = new KeyValues("Stats");
 
-  Get5_GetMatchStats(tmpStats);
+  OpenPug_GetMatchStats(tmpStats);
   tmpStats.GetString(STAT_SERIESTYPE, seriesType, sizeof(seriesType));
   db.Escape(seriesType, seriesTypeSz, sizeof(seriesTypeSz));
 
@@ -97,12 +97,12 @@ public void Get5_OnSeriesInit() {
   delete tmpStats;
 
   g_DisableStats = false;
-  LogDebug("Setting up series stats, get5_mysql_force_matchid = %d", g_ForceMatchIDCvar.IntValue);
+  LogDebug("Setting up series stats, OpenPug_mysql_force_matchid = %d", g_ForceMatchIDCvar.IntValue);
 
   if (g_ForceMatchIDCvar.IntValue > 0) {
     SetMatchID(g_ForceMatchIDCvar.IntValue);
     g_ForceMatchIDCvar.IntValue = 0;
-    Format(queryBuffer, sizeof(queryBuffer), "INSERT INTO `get5_stats_matches` \
+    Format(queryBuffer, sizeof(queryBuffer), "INSERT INTO `OpenPug_stats_matches` \
             (matchid, series_type, team1_name, team2_name, start_time) VALUES \
             (%d, '%s', '%s', '%s', NOW())",
            g_MatchID, seriesTypeSz, team1NameSz, team2NameSz);
@@ -114,7 +114,7 @@ public void Get5_OnSeriesInit() {
   } else {
     Transaction t = SQL_CreateTransaction();
 
-    Format(queryBuffer, sizeof(queryBuffer), "INSERT INTO `get5_stats_matches` \
+    Format(queryBuffer, sizeof(queryBuffer), "INSERT INTO `OpenPug_stats_matches` \
             (series_type, team1_name, team2_name, start_time) VALUES \
             ('%s', '%s', '%s', NOW())",
            seriesTypeSz, team1NameSz, team2NameSz);
@@ -151,10 +151,10 @@ static void SetMatchID(int matchid) {
   g_MatchID = matchid;
   char idStr[32];
   IntToString(g_MatchID, idStr, sizeof(idStr));
-  Get5_SetMatchID(idStr);
+  OpenPug_SetMatchID(idStr);
 }
 
-public void Get5_OnGoingLive(int mapNumber) {
+public void OpenPug_OnGoingLive(int mapNumber) {
   if (g_DisableStats)
     return;
 
@@ -164,7 +164,7 @@ public void Get5_OnGoingLive(int mapNumber) {
   char mapNameSz[sizeof(mapName) * 2 + 1];
   db.Escape(mapName, mapNameSz, sizeof(mapNameSz));
 
-  Format(queryBuffer, sizeof(queryBuffer), "INSERT IGNORE INTO `get5_stats_maps` \
+  Format(queryBuffer, sizeof(queryBuffer), "INSERT IGNORE INTO `OpenPug_stats_maps` \
         (matchid, mapnumber, mapname, start_time) VALUES \
         (%d, %d, '%s', NOW())",
          g_MatchID, mapNumber, mapNameSz);
@@ -175,10 +175,10 @@ public void Get5_OnGoingLive(int mapNumber) {
 
 public void UpdateRoundStats(int mapNumber) {
   // Update team scores
-  int t1score = CS_GetTeamScore(Get5_MatchTeamToCSTeam(MatchTeam_Team1));
-  int t2score = CS_GetTeamScore(Get5_MatchTeamToCSTeam(MatchTeam_Team2));
+  int t1score = CS_GetTeamScore(OpenPug_MatchTeamToCSTeam(MatchTeam_Team1));
+  int t2score = CS_GetTeamScore(OpenPug_MatchTeamToCSTeam(MatchTeam_Team2));
 
-  Format(queryBuffer, sizeof(queryBuffer), "UPDATE `get5_stats_maps` \
+  Format(queryBuffer, sizeof(queryBuffer), "UPDATE `OpenPug_stats_maps` \
         SET team1_score = %d, team2_score = %d WHERE matchid = %d and mapnumber = %d",
          t1score, t2score, g_MatchID, mapNumber);
   LogDebug(queryBuffer);
@@ -186,7 +186,7 @@ public void UpdateRoundStats(int mapNumber) {
 
   // Update player stats
   KeyValues kv = new KeyValues("Stats");
-  Get5_GetMatchStats(kv);
+  OpenPug_GetMatchStats(kv);
   char mapKey[32];
   Format(mapKey, sizeof(mapKey), "map%d", mapNumber);
   if (kv.JumpToKey(mapKey)) {
@@ -203,7 +203,7 @@ public void UpdateRoundStats(int mapNumber) {
   delete kv;
 }
 
-public void Get5_OnMapResult(const char[] map, MatchTeam mapWinner, int team1Score, int team2Score,
+public void OpenPug_OnMapResult(const char[] map, MatchTeam mapWinner, int team1Score, int team2Score,
                       int mapNumber) {
   if (g_DisableStats)
     return;
@@ -212,7 +212,7 @@ public void Get5_OnMapResult(const char[] map, MatchTeam mapWinner, int team1Sco
   char winnerString[64];
   GetTeamString(mapWinner, winnerString, sizeof(winnerString));
   Format(queryBuffer, sizeof(queryBuffer),
-         "UPDATE `get5_stats_maps` SET winner = '%s', end_time = NOW() \
+         "UPDATE `OpenPug_stats_maps` SET winner = '%s', end_time = NOW() \
         WHERE matchid = %d and mapnumber = %d",
          winnerString, g_MatchID, mapNumber);
   LogDebug(queryBuffer);
@@ -220,10 +220,10 @@ public void Get5_OnMapResult(const char[] map, MatchTeam mapWinner, int team1Sco
 
   // Update the series scores
   int t1_seriesscore, t2_seriesscore, tmp;
-  Get5_GetTeamScores(MatchTeam_Team1, t1_seriesscore, tmp);
-  Get5_GetTeamScores(MatchTeam_Team2, t2_seriesscore, tmp);
+  OpenPug_GetTeamScores(MatchTeam_Team1, t1_seriesscore, tmp);
+  OpenPug_GetTeamScores(MatchTeam_Team2, t2_seriesscore, tmp);
 
-  Format(queryBuffer, sizeof(queryBuffer), "UPDATE `get5_stats_matches` \
+  Format(queryBuffer, sizeof(queryBuffer), "UPDATE `OpenPug_stats_matches` \
         SET team1_score = %d, team2_score = %d WHERE matchid = %d",
          t1_seriesscore, t2_seriesscore, g_MatchID);
   LogDebug(queryBuffer);
@@ -275,7 +275,7 @@ public void AddPlayerStats(KeyValues kv, MatchTeam team) {
 
       // TODO: this should really get split up somehow. Once it hits 32-arguments
       // (aka just a few more) it will cause runtime errors and the Format will fail.
-      Format(queryBuffer, sizeof(queryBuffer), "REPLACE INTO `get5_stats_players` \
+      Format(queryBuffer, sizeof(queryBuffer), "REPLACE INTO `OpenPug_stats_players` \
                 (matchid, mapnumber, steamid64, team, \
                 rounds_played, name, kills, deaths, flashbang_assists, \
                 assists, teamkills, headshot_kills, damage, \
@@ -310,14 +310,14 @@ public void AddPlayerStats(KeyValues kv, MatchTeam team) {
   }
 }
 
-public void Get5_OnSeriesResult(MatchTeam seriesWinner, int team1MapScore, int team2MapScore) {
+public void OpenPug_OnSeriesResult(MatchTeam seriesWinner, int team1MapScore, int team2MapScore) {
   if (g_DisableStats)
     return;
 
   char winnerString[64];
   GetTeamString(seriesWinner, winnerString, sizeof(winnerString));
 
-  Format(queryBuffer, sizeof(queryBuffer), "UPDATE `get5_stats_matches` \
+  Format(queryBuffer, sizeof(queryBuffer), "UPDATE `OpenPug_stats_matches` \
         SET winner = '%s', team1_score = %d, team2_score = %d, end_time = NOW() \
         WHERE matchid = %d",
          winnerString, team1MapScore, team2MapScore, g_MatchID);
@@ -331,8 +331,8 @@ public int SQLErrorCheckCallback(Handle owner, Handle hndl, const char[] error, 
   }
 }
 
-public void Get5_OnRoundStatsUpdated() {
-  if (Get5_GetGameState() == Get5State_Live && !g_DisableStats) {
+public void OpenPug_OnRoundStatsUpdated() {
+  if (OpenPug_GetGameState() == OpenPugState_Live && !g_DisableStats) {
     UpdateRoundStats(MapNumber());
   }
 }
@@ -340,7 +340,7 @@ public void Get5_OnRoundStatsUpdated() {
 static int MapNumber() {
   int t1, t2;
   int buf;
-  Get5_GetTeamScores(MatchTeam_Team1, t1, buf);
-  Get5_GetTeamScores(MatchTeam_Team2, t2, buf);
+  OpenPug_GetTeamScores(MatchTeam_Team1, t1, buf);
+  OpenPug_GetTeamScores(MatchTeam_Team2, t2, buf);
   return t1 + t2;
 }

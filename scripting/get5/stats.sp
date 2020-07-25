@@ -172,7 +172,7 @@ public void Stats_SeriesEnd(MatchTeam winner) {
 }
 
 public Action Stats_PlayerDeathEvent(Event event, const char[] name, bool dontBroadcast) {
-  if (g_GameState != Get5State_Live) {
+  if (g_GameState != OpenPugState_Live) {
     return Plugin_Continue;
   }
 
@@ -268,7 +268,7 @@ static void UpdateTradeStat(int attacker, int victim) {
 }
 
 public Action Stats_DamageDealtEvent(Event event, const char[] name, bool dontBroadcast) {
-  if (g_GameState != Get5State_Live) {
+  if (g_GameState != OpenPugState_Live) {
     return Plugin_Continue;
   }
 
@@ -298,7 +298,7 @@ public Action Stats_DamageDealtEvent(Event event, const char[] name, bool dontBr
 }
 
 public Action Stats_BombPlantedEvent(Event event, const char[] name, bool dontBroadcast) {
-  if (g_GameState != Get5State_Live) {
+  if (g_GameState != OpenPugState_Live) {
     return Plugin_Continue;
   }
 
@@ -313,7 +313,7 @@ public Action Stats_BombPlantedEvent(Event event, const char[] name, bool dontBr
 }
 
 public Action Stats_BombDefusedEvent(Event event, const char[] name, bool dontBroadcast) {
-  if (g_GameState != Get5State_Live) {
+  if (g_GameState != OpenPugState_Live) {
     return Plugin_Continue;
   }
 
@@ -328,7 +328,7 @@ public Action Stats_BombDefusedEvent(Event event, const char[] name, bool dontBr
 }
 
 public Action Stats_BombExplodedEvent(Event event, const char[] name, bool dontBroadcast) {
-  if (g_GameState != Get5State_Live) {
+  if (g_GameState != OpenPugState_Live) {
     return Plugin_Continue;
   }
 
@@ -342,7 +342,7 @@ public Action Stats_BombExplodedEvent(Event event, const char[] name, bool dontB
 }
 
 public Action Stats_FlashbangDetonateEvent(Event event, const char[] name, bool dontBroadcast) {
-  if (g_GameState != Get5State_Live) {
+  if (g_GameState != OpenPugState_Live) {
     return Plugin_Continue;
   }
 
@@ -364,7 +364,7 @@ public Action Timer_ResetFlashStatus(Handle timer, int serial) {
 }
 
 public Action Stats_PlayerBlindEvent(Event event, const char[] name, bool dontBroadcast) {
-  if (g_GameState != Get5State_Live) {
+  if (g_GameState != OpenPugState_Live) {
     return Plugin_Continue;
   }
 

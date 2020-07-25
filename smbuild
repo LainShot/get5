@@ -1,10 +1,10 @@
-Plugin(source='scripting/get5.sp')
-Plugin(source='scripting/get5_mysqlstats.sp')
-Plugin(source='scripting/get5_apistats.sp')
+Plugin(source='scripting/OpenPug.sp')
+Plugin(source='scripting/OpenPug_mysqlstats.sp')
+Plugin(source='scripting/OpenPug_apistats.sp')
 
-Package(name='get5',
-        plugins=['get5', 'get5_mysqlstats', 'get5_apistats'],
-        disabled_plugins=['get5_mysqlstats', 'get5_apistats'],
+Package(name='OpenPug',
+        plugins=['OpenPug', 'OpenPug_mysqlstats', 'OpenPug_apistats'],
+        disabled_plugins=['OpenPug_mysqlstats', 'OpenPug_apistats'],
         filegroups={
             '.': ['LICENSE', 'README.md'],
         },
